@@ -107,9 +107,13 @@ There you go.
 
 &nbsp;
 
+&nbsp;
+
+# Signification
+
 For those interrested, here is the signification of DREAMLANDS :
 
-*Data<br>
+***Data<br>
 Representation<br>
 Embedding<br>
 Another<br>
@@ -118,7 +122,7 @@ Language<br>
 Accepting<br>
 No<br>
 Disturbing<br>
-Syntax*
+Syntax***
 
 &nbsp;
 
