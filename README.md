@@ -109,6 +109,24 @@ There you go.
 
 &nbsp;
 
+# Signification
+
+For those interrested, here is the signification of DREAMLANDS :
+
+***Data<br>
+Representation<br>
+Embedding<br>
+Another<br>
+Markup<br>
+Language<br>
+Accepting<br>
+No<br>
+Disturbing<br>
+Syntax***
+
+&nbsp;
+
+&nbsp;
 
 *Contact     : i.a.sebsil83@gmail.com*<br>
 *Youtube     : https://www.youtube.com/user/IAsebsil83*<br>
