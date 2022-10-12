@@ -1,0 +1,56 @@
+#!/usr/bin/dreamlands
+#
+# VEHICLES
+#
+motorcycle:
+	motor:
+		cylinder:
+			nbr:1
+#           size: in cm3
+			size:125
+	wheel:
+		number:2
+		type:"Road 5"
+		brand:"Michelin"
+	gas:"SP98"
+car:
+	motor:
+		cylinder:
+			nbr:4
+#           size: in cm3
+			size:375
+	wheel:
+		nbr:4
+		brand:"Dunlop"
+#
+# USERS :
+#
+Juanito:
+	cars:
+		work:
+			brand:"Citroen"
+			km:200000
+			seats:7
+		cruiser:
+			brand:"Peugeot"
+			km:10000
+		suv:
+			brand:"Range Rover"
+			km:100000
+#			weight: in kg
+			weight:1500.0f
+	motorcylcles:
+		little:
+			brand:"Kawasaki"
+			km:120000
+#			max_speed: in km/h
+            max_speed:254.81
+		longjourney:
+			brand:"Honda"
+			km:150000
+Miguel:
+	cars:
+#
+# Further information in next file
+#
+>example/data_to_read2.dl

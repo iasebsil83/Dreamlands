@@ -19,7 +19,7 @@ This project is divided in different branches :
 - [Go    ](https://github.com/iasebsil83/DREAMLANDS/tree/go), library for reading/writting DREAMLANDS in Go.
 - [Lua   ](https://github.com/iasebsil83/DREAMLANDS/tree/lua), library for reading/writting DREAMLANDS in Lua.
 
-We are currently on branch **master**.
+We are currently on branch **python**.
 
 &nbsp;
 
@@ -52,7 +52,7 @@ That means that a YAML reader can understand a DREAMLANDS text but the opposite 
 Here are all the rules of the DREAMLANDS syntax :
 
 ```
-- No empty line is allowed.
+- Empty lines are allowed.
 - Comments are allowed and concerns every line starting with a COMMENT CHARACTER.
 - Every non-commented line must be composed by :
   - A serie of consecutive TABULATION CHARACTERS (describing the depth degree of the data)
