@@ -76,9 +76,11 @@ Also pay attention to the character used, especially because of its encoding.
 
 ### Rules
 
-Here are all the rules of the DREAMLANDS syntax :
+Here are all the rules of the DREAMLANDS syntax (in 3 parts) :
 
 ```
+PART 1 : LINES
+
 -  1) Is considerated as a line every serie of character preceding a LINE_END character or EOF (end of file).
 
 -  2) Empty lines are ignored.
@@ -92,35 +94,57 @@ Here are all the rules of the DREAMLANDS syntax :
   - 4.d) 2 possibilities for the last element :
            If the current element is an ending child : The piece of data itself
            If the current key is a parent            : Nothing (the children themselves are the data)
-         (see rules 9 for parent/child definition)
+         (see next rule for parent/child definition)
 
--  5) Key names must contain only alphanumerical characters and underscores : [a-z], [A-Z], [0-9], '_'
 
--  6) Key names must not start with a digital character : [0-9]
 
--  7) The minimum number of character required for key names is 1.
+PART 2 : STRUCTURATION
 
-- 8) Data can be only of these types :
-  - 8.a) Booleans must be either true or false.
-  - 8.b) Characters must be delimited between simple quotes : '
-         They can contain any special character that requires a backslash header (such as line feeds '\n', tabulations '\t'...)
-  - 8.c) Integers must be only composed of numerical characters except the first one that can be a negative sign '-'.
-  - 8.d) Floats must respect the same rules as integers with the exception that a dot '.' is allowed as coma and numbers allowed as well after this dot.
-  - 8.e) Strings must be delimited by double quotes : "
-         They can contain any special caracters too (same rule for backslashes).
-
--  9) Every line indented one more time from the previous one is a child of this one.
+-  5) Every line indented one more time from the previous one is a child of this one.
+      However, only one indent of difference is allowed, more are not allowed.
       A child without children is called an ending child (or branch ending).
 
-- 10) Every line indented the same as the previous one is a brother/sister of this one.
+-  6) Every line indented the same as the previous one is a brother/sister of this one.
 
-- 11) When a NEW_FILE character is found, the rest of the line is interpreted as a path to another DREAMLANDS file to parse.
+-  7) Every line less indented than the previous one is a brother of the last element declared with the same indent.
+
+-  8) The first element to analyze must have 0 indentation (root element).
+
+
+
+PART 3 : KEY-VALUE PAIRS
+
+-  9) Key names must contain only alphanumerical characters and underscores : [a-z], [A-Z], [0-9], '_'
+      There is only one exception : Setting a minus character '-' as key name significates that the line refers to a list element.
+
+- 10) If a list element is declared, every one of its brothers must be list elements as well (no alphanumerical key names allowed).
+      The parent become a list and every element will be stored in an ordered list respecting the declaration order.
+
+- 11) The minimum number of character required for key names is 1.
+
+- 12) Data can be only of these types :
+  - 12.a) Booleans must be either true or false.
+  - 12.b) Characters must be delimited between simple quotes : '
+          They can contain any special character that requires a backslash header (such as line feeds '\n', tabulations '\t'...)
+  - 12.c) Integers must be only composed of numerical characters except the first one that can be a negative sign '-'.
+  - 12.d) Floats must respect the same rules as integers with the exception that a dot '.' is allowed as coma and numbers allowed as well after this dot.
+  - 12.e) Strings must be delimited by double quotes : "
+          They can contain any special caracters too (same rule for backslashes).
+
+
+
+PART 4 : IMPORTATIONS
+
+- 13) When a NEW_FILE character is found, the rest of the line is interpreted as a path to another DREAMLANDS file to parse.
       All data taken from the new file is combined with the current one.
 
-- 12) Every file analysed has its path stored and cannot be interpreted twice.
+- 14) Every file analysed has its path stored and cannot be interpreted twice.
 ```
 
 Pay attention to those rules : Every no-matching format will raise an error on parsing.
+
+**NOTE :** Rule 12 : That does NOT mean that ALL dreamlands files must start with a 0-indent element.
+The different libraries give examples of this.
 
 &nbsp;
 
