@@ -7,7 +7,8 @@
 &nbsp;
 
 
-# Content
+
+## Content
 
 This project is divided in different branches :
 - [master](https://github.com/iasebsil83/DREAMLANDS), general information about the DREAMLANDS.
@@ -26,79 +27,109 @@ We are currently on branch **master**.
 &nbsp;
 
 
-# Objective
+
+## I] Objective
 
 This language is inspired on the basics of the [YAML](https://yaml.org).
 
-DREAMLANDS is a serializable data syntax including the minimum rules in order to be interpreted the fastest and the easiest way.
+DREAMLANDS is a serializable syntax for representing any kind of data structure.
 
-It has been made as **simple** as possible to be read and written by any kind of program.
+&nbsp;
 
-The objective behind DREAMLANDS is to get/set information from a data file as quickly as possible.
+The objective behind DREAMLANDS is to get/set information from a data file as quickly as possible for both computers and users.
 
-That means that the syntax must be the lightest possible and restrictive.
+That means that the syntax must be **very light** (for user accessibility) and **restrictive** (for faster parsing).
 
-***NOTE:*** The default DREAMLANDS syntax is **included** into the YAML syntax.
+&nbsp;
 
-That means that a YAML reader can understand a DREAMLANDS text but the opposite is not totally true.
+***NOTE:*** The default DREAMLANDS syntax is (almost) **included** into the YAML syntax.
+
+That means that a YAML reader can (almost) understand a DREAMLANDS text but the opposite is not totally true.
 
 &nbsp;
 
 &nbsp;
 
 
-# Rules
 
-Here are all the rules of the DREAMLANDS syntax :
+## II] Practical handbook
 
-```
-- Empty lines are allowed.
-- Comments are allowed and concerns every line starting with a COMMENT CHARACTER.
-- Every non-commented line must be composed by :
-  - A serie of consecutive TABULATION CHARACTERS (describing the depth degree of the data)
-  - The key name of the current piece of data
-  - A SEPARATION CHARACTER
-  - The corresponding data
-  - An END CHARACTER
-- Key names must contain only alphanumerical characters and underscores [a-z] + [A-Z] + [0-9] + '_'.
-- Key names must not start with a digital character [0-9].
-- Data can be either boolean, character, integer, float or string :
-  - Booleans must be either true or false.
-  - Characters must be delimited between simple quotes '\''.
-    They can contain any special character.
-  - Integers must be only composed of numerical characters except the first one that can be a negative sign '-'.
-  - Floats must respect the same rules as integers with the exception that a dot '.' is allowed as coma and numbers allowed as well after this.
-  - Strings must be delimited by double quotes '\"'.
-    They can contain any special caracter too.
-- There is no maximum number of character for key names/data fields but the minimum number is 1.
-- Every key-value pair must have a data field except if it has children pairs.
-- Every line indented one more time from the previous one is a child of this one.
-- Every line indented the same as the previous one is a brother of this one.
-- When a NEW_FILE character is found, the rest of the line is interpreted as a path to another DREAMLANDS file to parse.
-- Every file analysed has its path stored and cannot be interpreted twice.
-```
+In this section, you will see all you have to know about DREAMLANDS in just a few lines.
 
-As you might have seen, there is a set of **special characters** that must be defined.
+### Special Variables
 
-By default, these characters are :
-```
+All the interpretation of the syntax is based on 5 special characters defined as follow :
+```python
 COMMENT    CHARACTER : '#'
-END        CHARACTER : '\n' (line feed)
+LINE_END   CHARACTER : '\n' (line feed)
 NEW_FILE   CHARACTER : '>'
 SEPARATION CHARACTER : ':'
 TABULATION CHARACTER : '\t' (tabulation)
 ```
-They are customizable at the beginning of all DREAMLANDS programs/libraries.
+They are customizable in the settings of all DREAMLANDS programs/libraries.
 
-***WARNING:*** Do not use alphanumerical characters as special (including underscores) or you may have surprises !
+***WARNING:*** Do not use alphanumerical characters or underscores (a-z, A-Z, 0-9, _) or you may have surprises !
 
 Also pay attention to the character used, especially because of its encoding.
 
 &nbsp;
 
+### Rules
+
+Here are all the rules of the DREAMLANDS syntax :
+
+```
+-  1) Is considerated as a line every serie of character preceding a LINE_END character or EOF (end of file).
+
+-  2) Empty lines are ignored.
+
+-  3) Every line starting with a COMMENT CHARACTER (in 1st position) is a comment : line ignored.
+
+-  4) Every non-commented line must be composed by a key-value pair as described here :
+  - 4.a) A serie of consecutive TABULATION CHARACTERs (giving the depth degree of the data)
+  - 4.b) The key name of the current piece of data
+  - 4.c) A SEPARATION CHARACTER
+  - 4.d) 2 possibilities for the last element :
+           If the current element is an ending child : The piece of data itself
+           If the current key is a parent            : Nothing (the children themselves are the data)
+         (see rules 9 for parent/child definition)
+
+-  5) Key names must contain only alphanumerical characters and underscores : [a-z], [A-Z], [0-9], '_'
+
+-  6) Key names must not start with a digital character : [0-9]
+
+-  7) The minimum number of character required for key names is 1.
+
+- 8) Data can be only of these types :
+  - 8.a) Booleans must be either true or false.
+  - 8.b) Characters must be delimited between simple quotes : '
+         They can contain any special character that requires a backslash header (such as line feeds '\n', tabulations '\t'...)
+  - 8.c) Integers must be only composed of numerical characters except the first one that can be a negative sign '-'.
+  - 8.d) Floats must respect the same rules as integers with the exception that a dot '.' is allowed as coma and numbers allowed as well after this dot.
+  - 8.e) Strings must be delimited by double quotes : "
+         They can contain any special caracters too (same rule for backslashes).
+
+-  9) Every line indented one more time from the previous one is a child of this one.
+      A child without children is called an ending child (or branch ending).
+
+- 10) Every line indented the same as the previous one is a brother/sister of this one.
+
+- 11) When a NEW_FILE character is found, the rest of the line is interpreted as a path to another DREAMLANDS file to parse.
+      All data taken from the new file is combined with the current one.
+
+- 12) Every file analysed has its path stored and cannot be interpreted twice.
+```
+
+Pay attention to those rules : Every no-matching format will raise an error on parsing.
+
 &nbsp;
 
+&nbsp;
+
+### Coloration
+
 Last but not least, the file *dreamlands.nanorc* given is a syntax coloration file made for the [nano](https://www.nano-editor.org/) text editor.
+
 To add it to your current nano configuration, use the following command:
 ```bash
 sudo cp dreamlands.nanorc /usr/share/nano
@@ -109,7 +140,9 @@ There you go.
 
 &nbsp;
 
-# Signification
+
+
+## Signification
 
 For those interrested, here is the signification of DREAMLANDS :
 
@@ -124,14 +157,16 @@ No<br>
 Disturbing<br>
 Syntax***
 
-&nbsp;
+Now you know why the last **S** is important !
 
 &nbsp;
 
+&nbsp;
 
-*Contact     : i.a.sebsil83@gmail.com*<br>
-*Youtube     : https://www.youtube.com/user/IAsebsil83*<br>
-*GitHub repo : https://github.com/iasebsil83*<br>
+
+*Contact      : i.a.sebsil83@gmail.com*<br>
+*Youtube      : https://www.youtube.com/user/IAsebsil83*<br>
+*Repositories : https://github.com/iasebsil83*<br>
 
 Let's Code ! &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
