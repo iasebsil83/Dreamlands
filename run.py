@@ -2,6 +2,7 @@
 
 
 
+
 # ---- IMPORTATIONS ----
 
 #add library path
@@ -11,42 +12,94 @@ sys.path.append("lib")
 #dreamlands
 import dreamlands as dl
 
+#json (for more readable output only)
+import json
 
 
 
 
 
-# ---- MAIN ----
+
+# ---- UTILITIES ----
+
+#print data structures prettier
+def prettyPrint(data):
+	print(json.dumps(data, indent=4))
+
+
+
+
+
+
+# ---- EXECUTION ----
+
+# EXAMPLE 1 : READING
 
 #read a dreamlands file
 data = dl.read("example/data_to_read1.dl")
 
-#display
-print("Data read from \'example/data_to_read1.saml\' : ", end='')
-print(data, "\n\n")
+#display parsed content
+print("EXAMPLE 1 : Data read from \'example/data_to_read1.dl\' : ")
+prettyPrint(data)
+print()
 
-#write a new dreamlands file
-data_dict = {
+
+
+
+# EXAMPLE 2 : WRITING
+
+#create a new data structure
+new_data_dict = {
+
+	#small devices
 	'smartphone':{
-#        battery : in mAh
+        #         in mAh
 		'battery':4000.0,
-		'OS':"Android"
+		'OS'     :"Android"
 	},
+
+	#big devices
 	'computer':{
 		'name':"Nitro",
 		'CPU':{
-			'brand':"AMD",
+			'brand'   :"AMD",
 			'core_nbr':16
 		},
 		'GPU':{
 			'brand':"Nvidia",
-			'fps':60.0
-		}
+            #       100 000 000 000 = 100G
+			'flops':100000000000,
+			'compatibility':[
+				"GNU/Linux",
+				"Windows",
+				"MacOSX"
+			]
+		},
+
+		#users
+		'users':[
+
+			#users information (as 1st element of list)
+			{
+				'users_nbr':2,
+				'titles'   :[ "First Name", "Last Name", "Sex", "Age", "Size" ]
+			},
+
+			#undefined user
+			False,
+
+  			#users                 (sex)          (in cm)
+			#1st name,  last name, is male?, age, size
+			['Michel', 'GARLIC',   True,     17,  1.77],
+			['Andrea', 'PARMESAN', False,    28,  1.61]
+		]
 	}
 }
-print("Writing : ", end='')
-print(data_dict, end='')
-print(" in file 'example/data_to_write.dl'.")
+
+#get dreamlands text equivalent
+print("EXAMPLE 2 : Writing :")
+prettyPrint(new_data_dict)
+print("in file 'example/data_to_write.dl'.")
 
 #write into a dreamlands file
-dl.write(data_dict, "example/data_to_write.dl")
+dl.write(new_data_dict, "example/data_to_write.dl")

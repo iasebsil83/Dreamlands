@@ -1,13 +1,13 @@
 # This file is a suite to data_to_read1.dl
 # DO NOT SEPARATE THESE FILES
 #
-		cruiser:
-            brand:"Renaut"
-			name:"Espace"
-            km:13500
-#			raise_time: in s (time to get from 0 to 100km/h)
-			raise_time:10.6f
-        work:
-            brand:"Citroen"
-            km:389000
-            seats:7
+			cruiser:
+				brand:"Renaut"
+				name:"Espace"
+				km:13500
+#				raise_time: in s (time to get from 0 to 100km/h)
+				raise_time:10.6
+			work:
+				brand:"Citroen"
+				km:389000
+				seats:7

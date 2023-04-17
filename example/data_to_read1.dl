@@ -1,7 +1,8 @@
 #!/usr/bin/dreamlands
-#
+
+
+
 # VEHICLES
-#
 motorcycle:
 	motor:
 		cylinder:
@@ -11,7 +12,10 @@ motorcycle:
 	wheel:
 		number:2
 		type:"Road 5"
-		brand:"Michelin"
+#		pressure: in bar
+		pressure:
+			-:2.1
+			-:2.2
 	gas:"SP98"
 car:
 	motor:
@@ -21,35 +25,48 @@ car:
 			size:375
 	wheel:
 		nbr:4
-		brand:"Dunlop"
-#
-# USERS :
-#
-Juanito:
-	cars:
-		work:
-			brand:"Citroen"
-			km:200000
-			seats:7
-		cruiser:
-			brand:"Peugeot"
-			km:10000
-		suv:
-			brand:"Range Rover"
-			km:100000
-#			weight: in kg
-			weight:1500.0f
-	motorcylcles:
-		little:
-			brand:"Kawasaki"
-			km:120000
-#			max_speed: in km/h
-            max_speed:254.81
-		longjourney:
-			brand:"Honda"
-			km:150000
-Miguel:
-	cars:
+#		pressure: in bar
+		pressure:
+			-:2.3
+			-:2.3
+			-:2.5
+			-:2.48
+
+
+
+# USERS
+users:
+
+#	1st user
+	-:
+		name:"Juanito"
+		cars:
+			work:
+				brand:"Citroen"
+				km:200000
+				seats:7
+			cruiser:
+				brand:"Peugeot"
+				km:10000
+			suv:
+				brand:"Range Rover"
+				km:100000
+#				weight: in kg
+				weight:1500.0f
+		motorcycles:
+			little:
+				brand:"Kawasaki"
+				km:120000
+#				max_speed: in km/h
+				max_speed:254.81
+			longjourney:
+				brand:"Honda"
+				km:150000
+
+#	2nd user
+	-:
+		name:"Miguel"
+		cars:
 #
 # Further information in next file
 #
