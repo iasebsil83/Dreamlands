@@ -98,29 +98,146 @@ def __checkKeyword(keyword):
 # ---- DATA <-> TEXT ----
 
 #data <- from text
+def __importOtherFiles(instructs, imported_files):
+	'''
+	[INTERNAL FUNCTION] Import the content of all files called by the NEW_FILE character.
+	This function is recursive.
+
+	instructs: list
+	imported_files: list
+
+	Returns the instructions given as input plus those imported from NEW_FILE calls.
+	'''
+
+	#for each instruction
+	result = []
+	for inst in instructs:
+
+		#importation detected
+		if len(inst) != 0 and inst[0] == NEW_FILE_CHARACTER:
+			real_filename = os.path.realpath(inst[1:])
+
+			#file has already been imported => ERROR
+			if real_filename in imported_files:
+				raise ValueError("File '" + real_filename + "' already imported at instruction '" + inst + "' (cyclic importation).")
+
+			#file not imported yet => IMPORT IT
+			else:
+				imported_files.append(real_filename)
+
+				#read raw content
+				f = open(real_filename, "r")
+				newfile_instructs = f.read().split(LINE_END_CHARACTER)
+				f.close()
+
+				#import recursively inside the newly taken instructions
+				result += __importOtherFiles(newfile_instructs, imported_files)
+
+		#regular instruction => add it to result
+		else:
+			result.append(inst)
+
+	return result
+
 def fromText(text):
 	'''
-	Convert a DREAMLANDStext into dictionnary.
+	Convert a DREAMLANDS text into data structure.
 
 	text: str
 
 	Returns a data structure corresponding to the given DREAMLANDS text (dict/list).
 	'''
 
+	# STEP 1 : PREPARATION
+
+	#some temporary constants (infoList indexes)
+	DEPTH     = 0
+	KEYWORD   = 1
+	IS_PARENT = 2
+	VALUE     = 3
+
+	#prepare an information list formatted as : (indent_nbr, keyword, is_parent?, value)
+	infoList = []
+
 	#for each instruction
-	data = {}
+	instructs = text.split(LINE_END_CHARACTER)
+
+
+
+	# STEP 2 : MANAGE OTHER FILES IMPORTATION
+
+	#gather every other text from new_file characters
+	instructs = __importOtherFiles(instructs, [])
+
+	print("[DEBUG] Full instructs : [")
+	for i in instructs:
+		print("\t'" + i + "',")
+	print("]")
+
+
+
+	# STEP 3 : EXTRACT INFORMATION
+
+	#for each instruction
+	for i in range(len(instructs)):
+
+		#empty line or comment => ignore
+		if len(instructs[i]) == 0 or instructs[i][0] == COMMENT_CHARACTER:
+			continue
+
+		#separate fields
+		segments = inst.split(SEPARATION_CHARACTER)
+		if len(segments) != 2:
+			raise ValueError("Incorrect structure for DREAMLANDS instruction '" + instructs[i] + "'.")
+
+		#get element depth
+		depth = 0
+		for t in segments[0]:
+			if t != TABULATION_CHARACTER:
+				break
+			depth += 1
+
+		#get keyword
+		keyword = segments[0][depth:]
+		if keyword not in KEYWORDS_ALLOWED_CHARACTERS:
+			raise ValueError("Invalid keyword name for DREAMLANDS instruction '" + instructs[i] + "'.")
+
+		#special case : 1st element
+		if i == 0:
+			if depth != 0:
+				raise ValueError("Detected non-zero depth on first element at instruction '" + instructs[i] + "'.")
+
+		#common case
+		else:
+
+			#1 time deeper => child of previous element
+			if depth == infoList[-1][DEPTH]+1:
+				is_parent = True
+
+		#fill infoList
+		infoList.append(
+			(depth, keyword, is_parent, segments[1])
+		)
+
+	#last element check
+	if infoList[-1][IS_PARENT]:
+		raise ValueError("Last element detected as parent but it can only be a child (Keyword : '" + infoList[-1][KEYWORD] + "').")
+
+	#special case: no instruction (return empty dict)
+	if len(instructs) == 1 and instructs[0] == "":
+		return {}
 
 	return data
 
 
 
 #data -> to text
-def __elementToText(elem, degree):
+def __elementToText(elem, depth):
 	'''
-	Convert a data element into DREAMLANDS text.
+	[INTERNAL FUNCTION] Convert a data element into DREAMLANDS text.
 
 	data: any (except None)
-	degree: int
+	depth: int
 
 	Returns a chunk of DREAMLANDS text corresponding to the given data.
 	'''
@@ -129,14 +246,14 @@ def __elementToText(elem, degree):
 	if isinstance(elem, dict):
 		text = LINE_END_CHARACTER
 		for k in elem.keys():
-			text += (degree+1)*TABULATION_CHARACTER + k + SEPARATION_CHARACTER + __elementToText(elem[k], degree+1)
+			text += (depth+1)*TABULATION_CHARACTER + k + SEPARATION_CHARACTER + __elementToText(elem[k], depth+1)
 		return text
 
 	#case 2: [PARENT] element is a tuple/list
 	elif isinstance(elem, tuple) or isinstance(elem, list):
 		text = LINE_END_CHARACTER
 		for e in elem:
-			text += (degree+1)*TABULATION_CHARACTER + '-' + SEPARATION_CHARACTER + __elementToText(e, degree+1)
+			text += (depth+1)*TABULATION_CHARACTER + '-' + SEPARATION_CHARACTER + __elementToText(e, depth+1)
 		return text
 
 	#case 3: [CHILD] element is standalone
