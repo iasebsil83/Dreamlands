@@ -7,7 +7,8 @@
 &nbsp;
 
 
-# Content
+
+## Content
 
 This project is divided in different branches :
 - [master](https://github.com/iasebsil83/DREAMLANDS), general information about the DREAMLANDS.
@@ -26,7 +27,8 @@ We are currently on branch **python**.
 &nbsp;
 
 
-# Information
+
+## Information
 
 All information about DREAMLANDS is centralized in branch [master](https://github.com/iasebsil83/DREAMLANDS).
 
@@ -34,9 +36,10 @@ All information about DREAMLANDS is centralized in branch [master](https://githu
 
 &nbsp;
 
-*Contact     : i.a.sebsil83@gmail.com*<br>
-*Youtube     : https://www.youtube.com/user/IAsebsil83*<br>
-*GitHub repo : https://github.com/iasebsil83*<br>
+
+*Contact      : i.a.sebsil83@gmail.com*<br>
+*Youtube      : https://www.youtube.com/user/IAsebsil83*<br>
+*Repositories : https://github.com/iasebsil83*<br>
 
 Let's Code ! &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
