@@ -136,7 +136,10 @@ PART 4 : IMPORTATIONS
 - 12) When a NEW_FILE character is found, the rest of the line is interpreted as a path to another DREAMLANDS file to parse.
       All data taken from the new file is combined with the current one.
 
-- 13) Every file analysed has its path stored and cannot be interpreted twice.
+- 13) Importation paths can be either absolute or relative.
+      In case of a relative paths, the current working directory is the one that holds the current file (not the one where the user executes something).
+
+- 14) Every file analysed has its path stored and cannot be interpreted twice.
 ```
 
 Pay attention to those rules : Every non-matching format will raise an error on parsing.
