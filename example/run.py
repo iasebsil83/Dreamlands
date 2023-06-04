@@ -7,7 +7,7 @@
 
 #add library path
 import sys
-sys.path.append("lib")
+sys.path.append("../lib")
 
 #dreamlands
 import dreamlands as dl
@@ -36,10 +36,10 @@ def prettyPrint(data):
 # EXAMPLE 1 : READING
 
 #read a dreamlands file
-data = dl.read("example/data_to_read1.dl")
+data = dl.read("data_to_read1.dl")
 
 #display parsed content
-print("EXAMPLE 1 : Data read from \'example/data_to_read1.dl\' : ")
+print("EXAMPLE 1 : Data read from \'data_to_read1.dl\' : ")
 prettyPrint(data)
 print()
 
@@ -99,7 +99,7 @@ new_data_dict = {
 #get dreamlands text equivalent
 print("EXAMPLE 2 : Writing :")
 prettyPrint(new_data_dict)
-print("in file 'example/data_to_write.dl'.")
+print("in file 'data_to_write.dl'.")
 
 #write into a dreamlands file
-dl.write(new_data_dict, "example/data_to_write.dl")
+dl.write(new_data_dict, "data_to_write.dl")
