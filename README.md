@@ -61,14 +61,14 @@ In this section, you will see all you have to know about DREAMLANDS in just a fe
 All the interpretation of the syntax is based on 5 special characters defined as follow :
 ```python
 COMMENT    CHARACTER : '#'
-LINE_END   CHARACTER : '\n' (line feed)
+LINE_END   CHARACTER : '\n' #line feed
 NEW_FILE   CHARACTER : '>'
 SEPARATION CHARACTER : ':'
-TABULATION CHARACTER : '\t' (tabulation)
+TABULATION CHARACTER : '\t' #tabulation
 ```
 They are customizable in the settings of all DREAMLANDS programs/libraries.
 
-***WARNING:*** Do not use alphanumerical characters or underscores (a-z, A-Z, 0-9, _) or you may have surprises !
+***WARNING:*** Do not use alphanumerical characters or underscores or you may have surprises ! (a-z, A-Z, 0-9, _)
 
 Also pay attention to the character used, especially because of its encoding.
 
@@ -89,7 +89,7 @@ PART 1 : LINES
 
 -  4) Every non-commented line must be composed by a key-value pair as described here :
   - 4.a) A serie of consecutive TABULATION CHARACTERs (giving the depth degree of the data)
-  - 4.b) The key name of the current piece of data
+  - 4.b) The key name of the current piece of data (1 byte minimum)
   - 4.c) A SEPARATION CHARACTER
   - 4.d) 2 possibilities for the last element :
            If the current element is an ending child : The piece of data itself
@@ -120,30 +120,28 @@ PART 3 : KEY-VALUE PAIRS
 - 10) If a list element is declared, every one of its brothers must be list elements as well (no alphanumerical key names allowed).
       The parent become a list and every element will be stored in an ordered list respecting the declaration order.
 
-- 11) The minimum number of character required for key names is 1.
-
-- 12) Data can be only of these types :
-  - 12.a) Booleans must be either true or false.
-  - 12.b) Characters must be delimited between simple quotes : '
+- 11) Data can be only of these types :
+  - 11.a) Booleans must be either true or false.
+  - 11.b) Characters must be delimited between simple quotes : '
           They can contain any special character that requires a backslash header (such as line feeds '\n', tabulations '\t'...)
-  - 12.c) Integers must be only composed of numerical characters except the first one that can be a negative sign '-'.
-  - 12.d) Floats must respect the same rules as integers with the exception that a dot '.' is allowed as coma and numbers allowed as well after this dot.
-  - 12.e) Strings must be delimited by double quotes : "
+  - 11.c) Integers must be only composed of numerical characters except the first one that can be a negative sign '-'.
+  - 11.d) Floats must respect the same rules as integers with the exception that a dot '.' is allowed as coma and numbers allowed as well after this dot.
+  - 11.e) Strings must be delimited by double quotes : "
           They can contain any special caracters too (same rule for backslashes).
 
 
 
 PART 4 : IMPORTATIONS
 
-- 13) When a NEW_FILE character is found, the rest of the line is interpreted as a path to another DREAMLANDS file to parse.
+- 12) When a NEW_FILE character is found, the rest of the line is interpreted as a path to another DREAMLANDS file to parse.
       All data taken from the new file is combined with the current one.
 
-- 14) Every file analysed has its path stored and cannot be interpreted twice.
+- 13) Every file analysed has its path stored and cannot be interpreted twice.
 ```
 
-Pay attention to those rules : Every no-matching format will raise an error on parsing.
+Pay attention to those rules : Every non-matching format will raise an error on parsing.
 
-**NOTE :** Rule 12 : That does NOT mean that ALL dreamlands files must start with a 0-indent element.
+**NOTE :** Rule 11 : That does NOT mean that ALL dreamlands files must start with a 0-indent element.
 The different libraries give examples of this.
 
 &nbsp;
