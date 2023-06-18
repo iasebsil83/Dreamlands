@@ -52,7 +52,7 @@ users:
 				brand:"Range Rover"
 				km:100000
 #				weight: in kg
-				weight:1500.0f
+				weight:1500.0
 		motorcycles:
 			little:
 				brand:"Kawasaki"
@@ -70,4 +70,4 @@ users:
 #
 # Further information in next file
 #
->vehicles1.dl
+>vehicles2.dl
