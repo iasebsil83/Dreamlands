@@ -81,11 +81,12 @@ Here are all the rules of the DREAMLANDS syntax (in 3 parts) :
 ```
 PART 1 : LINES
 
--  1) Is considerated as a line every serie of character preceding a LINE_END character or EOF (end of file).
+-  1) Is considerated as a line every serie of character preceding a LINE_END CHARACTER or EOF (end of file).
 
 -  2) Empty lines are ignored.
 
--  3) Every line starting with a COMMENT CHARACTER (in 1st position) is a comment : line ignored.
+-  3) Every COMMENT CHARACTER out of text declaration (character/string) marks a comment section.
+      Every characters from this one until the next LINE_END CHARACTER will be ignored.
 
 -  4) Every non-commented line must be composed by a key-value pair as described here :
   - 4.a) A serie of consecutive TABULATION CHARACTERs (giving the depth degree of the data)
@@ -118,7 +119,7 @@ PART 3 : KEY-VALUE PAIRS
       There is only one exception : Setting a minus character '-' as key name significates that the line refers to a list element.
 
 - 10) If a list element is declared, every one of its brothers must be list elements as well (no alphanumerical key names allowed).
-      The parent become a list and every element will be stored in an ordered list respecting the declaration order.
+      The parent becomes a list and every element will be stored in an ordered list respecting the declaration order.
 
 - 11) Data can be only of these types :
   - 11.a) Booleans must be either true or false.
@@ -140,6 +141,9 @@ PART 4 : IMPORTATIONS
       In case of a relative paths, the current working directory is the one that holds the current file (not the one where the user executes something).
 
 - 14) Every file analysed has its path stored and cannot be interpreted twice.
+
+Please note that the features present in this section can be disabled at will.
+If so, present importations are NOT raising errors but simply ignored.
 ```
 
 Pay attention to those rules : Every non-matching format will raise an error on parsing.
