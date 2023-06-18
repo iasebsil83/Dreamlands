@@ -469,6 +469,14 @@ def __textToInstructs(text):
 		instructs[-1][I__KEY] = pair[0]
 		value                 = pair[1]
 
+		#check key name length
+		if len(instructs[-1][I__KEY]) == 0:
+			raise ValueError(
+				"Missing key name : at least one character is required (line " + \
+				str(ri[RI__LINE_NBR]) + " column "                             + \
+				str(ri[RI__COLM_NBR]) + ")."
+			)
+
 		#check key name
 		if instructs[-1][I__KEY] != '-':
 			for c in instructs[-1][I__KEY]:
