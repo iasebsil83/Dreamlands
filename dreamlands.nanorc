@@ -5,20 +5,20 @@ header "^#!.*/(dreamlands|dl)"
 magic "DREAMLANDS data file"
 comment "#"
 
-# Separation character
-color green ":"
-
 # Numbers
-color brightred "[0-9\.]*" "[0-9\.]f"
+color brightred "[0-9\.]+"
 
 # Keywords
-color brightcyan "[[:alpha:]_][[:alnum:]_]*:"
+color brightcyan "([[:alnum:]_]+|\-):"
+
+# Separation character (default)
+color green ":"
 
 # New file character
-color brightwhite ">.*"
+color brightwhite "^ *>"
 
 # Comments
-color cyan "^#.*"
+color cyan "^#"
 
 # Strings
 color brightyellow ""(\\.|[^"])*"" "'(\\.|[^'])*'"
