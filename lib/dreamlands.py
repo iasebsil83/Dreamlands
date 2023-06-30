@@ -103,8 +103,18 @@ I__LINE_NBR  = 0
 I__COLM_NBR  = 1
 I__DEPTH     = 2
 I__KEY       = 3
-I__IS_PARENT = 4
-I__VALUE     = 5
+I__VALUE     = 4
+
+
+
+
+
+
+# ---- GLOBAL DECLARATIONS ----
+
+#current index of instructs during unparsing
+class _:
+	instructsIndex = 0
 
 
 
@@ -192,8 +202,8 @@ def fromText(text):
 	if instructs[0][I__DEPTH] != 0:
 		raise IndentationError("Incorrect indent for first element : zero-depth is required.")
 
-	#check last element
-	if instructs[-1][I__IS_PARENT]:
+	#check last element parentality
+	if instructs[-1][I__VALUE] is None:
 		raise ValueError("Incorrect value for last element : child element required.")
 
 	#debug
@@ -204,6 +214,7 @@ def fromText(text):
 		print("]")
 
 	#finally translate instructions into data
+	_.instructsIndex = 0
 	return __instructsToData(instructs)
 
 
@@ -389,7 +400,7 @@ def __textToInstructs(text):
 
 	# STEP 2 : SEPARATE FIELDS (inside each raw instruction)
 
-	#instructions in strict format : [line_nbr, column_nbr, depth, is_parent?, value]
+	#instructions in strict format
 	instructs = []
 
 	#for each instruction
@@ -428,7 +439,6 @@ def __textToInstructs(text):
 					ri[RI__COLM_NBR],    #colm_nbr
 					-1,                  #depth : negative means IMPORTATION FLAG
 					"",                  #key
-					False,               #is_parent?
 					ri[RI__RAW_TEXT][1:] #value : here, filename is stored
 				])
 
@@ -442,8 +452,7 @@ def __textToInstructs(text):
 				ri[RI__COLM_NBR], #colm_nbr
 				0,                #depth
 				"",               #key
-				False,            #is_parent?
-				None              #value
+				None              #value (None also means : PARENT)
 			])
 
 
@@ -499,10 +508,6 @@ def __textToInstructs(text):
 			#case 1.2 : string declaration
 			elif len_ri_str_text != 0:
 				instructs[-1][I__VALUE] = ri[RI__STR_TEXT]
-
-			#really no value => it is a parent element
-			else:
-				instructs[-1][I__IS_PARENT] = True
 
 			#analysis terminated
 			continue
@@ -573,19 +578,106 @@ def __textToInstructs(text):
 
 
 #translate intructions into data
-def __instructsToData(instructs):
+def __getFullValue(instructs, current_depth):
+	'''
+	[INTERNAL FUNCTION] Get value of instruction even if it is a parent.
+	This function is 2-times recursive with __instructsToData().
+
+	instructs: list
+
+	Returns data structure (list, dictionnary, or raw element).
+	'''
+
+	#get brother value : if parent, first process its children
+	value = instructs[_.instructsIndex][I__VALUE]
+	_.instructsIndex += 1
+	if value is None:
+		value = __instructsToData(instructs, current_depth+1)
+
+	return value
+
+def __instructsToData(instructs, current_depth=0):
 	'''
 	[INTERNAL FUNCTION] Translates an instruction list into data structure.
+	This function is 2-times recursive with __getFullValue().
 
 	instructs: list
 
 	Returns data structure (list or dictionnary).
 	'''
-	data = {}
 
-	#for each instruction
-	for i in range(len(instructs)):
-		pass
+	#1st instruction is a list element => global data will be a list
+	data_isList = (instructs[_.instructsIndex][I__KEY] == '-')
+	if data_isList:
+		data = []
+	else:
+		data = {} #else, a dictionnary
+
+	#for each instruction (mind that instructsIndex is NOT incremented in general scope of loop but in statements)
+	instructs_len = len(instructs)
+	while _.instructsIndex < instructs_len:
+
+		#debug
+		if DEBUG_MODE:
+			print("[DEBUG] translating into data " + str(instructs[_.instructsIndex]) + "  instructsIndex " + str(_.instructsIndex) + ".")
+
+		#case 1 : too much indent
+		if instructs[_.instructsIndex][I__DEPTH] > current_depth+1:
+			raise IndentationError(
+				"Too much indent for instruct '" + instructs[_.instructsIndex][I__KEY] + "' (line " + \
+				str(instructs[_.instructsIndex][I__LINE_NBR]) + " column "                          + \
+				str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+			)
+
+		#case 2 : child element
+		elif instructs[_.instructsIndex][I__DEPTH] == current_depth+1:
+
+			#children are processed by their parents (considerated as brothers between them)
+			raise ValueError(
+				"Children element '" + instructs[_.instructsIndex][I__KEY] + "' detected but no parent declared (line " + \
+				str(instructs[_.instructsIndex][I__LINE_NBR]) + " column "                                              + \
+				str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+			)
+
+		#case 3 : brother element
+		elif instructs[_.instructsIndex][I__DEPTH] == current_depth:
+
+			#list element (brothers must be of the same kind)
+			if data_isList:
+				if instructs[_.instructsIndex][I__KEY] != '-':
+					raise ValueError(
+						"Key name '" + instructs[_.instructsIndex][I__KEY] + "' detected inside a list (line " + \
+						str(instructs[_.instructsIndex][I__LINE_NBR]) + " column "                             + \
+						str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+					)
+
+				#add brother element next to the current one
+				data.append( __getFullValue(instructs, current_depth) )
+
+			#non-list element (brothers must be of the same kind)
+			else:
+				if instructs[_.instructsIndex][I__KEY] == '-':
+					raise ValueError(
+						"List element detected outside a list (line "              + \
+						str(instructs[_.instructsIndex][I__LINE_NBR]) + " column " + \
+						str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+					)
+				key = instructs[_.instructsIndex][I__KEY]
+
+				#check key before adding brother
+				if key in data.keys():
+					raise ValueError(
+						"Key '" + key + "' already defined in its parent (line "   + \
+						str(instructs[_.instructsIndex][I__LINE_NBR]) + " column " + \
+						str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+					)
+
+				#add brother element next to the current one (get value even recursively)
+				data[key] = __getFullValue(instructs, current_depth)
+
+		#case 4 : brother element of a parent (an uncle / grand-uncle / ...) => not of our business (end of child block)
+		else:
+			return data
 
 	return data
 
