@@ -1,9 +1,12 @@
 ## Here is an example for DREAMLANDS files
 
-syntax dreamlands "\.(dream|dl)$"
+syntax dreamlands "\.(dreamlands|dl)$"
 header "^#!.*/(dreamlands|dl)"
 magic "DREAMLANDS data file"
 comment "#"
+
+#booleans
+color brightmagenta "false|true"
 
 # Numbers
 color brightred "[0-9\.]+"
@@ -18,7 +21,7 @@ color green ":"
 color brightwhite "^ *>"
 
 # Comments
-color cyan "^#"
+color cyan "	*#.*"
 
 # Strings
 color brightyellow ""(\\.|[^"])*"" "'(\\.|[^'])*'"
