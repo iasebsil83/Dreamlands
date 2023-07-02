@@ -144,6 +144,11 @@ PART 4 : IMPORTATIONS
 
 Please note that the features present in this section can be disabled at will.
 If so, present importations are NOT raising errors but simply ignored.
+
+
+
+OPTION : ADDITIONAL_SPACES_ALLOWED (enabled by default)
+  If enabled, spaces (' ') are tolerated everywhere on lines and they are ignored.
 ```
 
 Pay attention to those rules : Every non-matching format will raise an error on parsing.
