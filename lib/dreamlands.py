@@ -55,16 +55,26 @@ import string
 # ---- OPTIONS ----
 
 #allow additional spaces
-ADDITIONAL_SPACES_ALLOWED = False
-
-#allow external files importation (if False, importations will be skipped)
-EXTERNAL_IMPORTATIONS_ALLOWED = True
+ADDITIONAL_SPACES_ALLOWED = True
 
 #debug mode
 DEBUG_MODE = False
 
+#allow external files importation (if False, importations will be skipped)
+EXTERNAL_IMPORTATIONS_ALLOWED = True
+
 #python character optimization (if True, python strings of 1 character long will be interpreted as characters)
 PYTHON_CHARACTERS_OPTIMIZATION = True # This is only applicable in function toText()
+
+
+
+
+
+
+# ---- CONSTANTS ----
+
+#blanks : DO NOT MODIFY
+BLANKS = (' ', '\t')
 
 
 
@@ -387,7 +397,13 @@ def __textToInstructs(text):
 	#remove additional spaces (optional)
 	if ADDITIONAL_SPACES_ALLOWED:
 		for a in range(len(raw_instructs)):
-			raw_instructs[a][RI__RAW_TEXT] = ''.join( raw_instructs[a][RI__RAW_TEXT].split(' ') )
+
+			#remove spaces in raw_instructs[a][RI__RAW_TEXT]
+			ri_rawText = ""
+			for c in raw_instructs[a][RI__RAW_TEXT]:
+				if c != ' ':
+					ri_rawText += c
+			raw_instructs[a][RI__RAW_TEXT] = ri_rawText
 
 	#debug
 	if DEBUG_MODE:

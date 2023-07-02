@@ -7,26 +7,23 @@ motorcycle:
 	motor:
 		cylinder:
 			nbr:1
-#           size: in cm3
-			size:125
+			size:125     #in cm3
 	wheel:
-		number:2
-		type:"Road 5"
-#		pressure: in bar
+		number: 2
+		type:   "Road 5" #for those who like spaces
 		pressure:
 			-:2.1
 			-:2.2
 	gas:"SP98"
+
 car:
 	motor:
-		cylinder:
+		c y l i n d e r : #spaces are allowed everywhere (if option enabled!)
 			nbr:4
-#           size: in cm3
-			size:375
+			s iz e:3 7 5 #in cm3
 	wheel:
 		nbr:4
-#		pressure: in bar
-		pressure:
+		pressure: #in bar
 			-:2.3
 			-:2.3
 			-:2.5
@@ -51,14 +48,13 @@ users:
 			suv:
 				brand:"Range Rover"
 				km:100000
-#				weight: in kg
-				weight:1500.0
+				weight:1500.0 #in kg
+
 		motorcycles:
 			little:
 				brand:"Kawasaki"
 				km:120000
-#				max_speed: in km/h
-				max_speed:254.81
+				max_speed:254.81 #in km/h
 			longjourney:
 				brand:"Honda"
 				km:150000
