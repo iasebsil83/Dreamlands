@@ -155,8 +155,6 @@ The different libraries give examples of this.
 
 Note that an option can be enabled to allow additional spaces in non-text fields.
 
-**I HIGHLY DISCOURAGE USING THIS OPTION because of the risk of mistakes in indentation aspect.**
-
 &nbsp;
 
 &nbsp;
