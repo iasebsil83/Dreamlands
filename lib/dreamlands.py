@@ -2,7 +2,7 @@
 
 
 
-# .------------------ DREAMLANDS Python Library -----------------.
+# .-------------- DREAMLANDS Python Library [0.1.0] -------------.
 # |                                                              |
 # |     This library is the official parser tool for DREAMLANDS  |
 # | files. It includes 4 functions :                             |
