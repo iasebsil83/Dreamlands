@@ -20,7 +20,7 @@ This project is divided in different branches :
 - [Go    ](https://github.com/iasebsil83/DREAMLANDS/tree/go), library for reading/writting DREAMLANDS in Go.
 - [Lua   ](https://github.com/iasebsil83/DREAMLANDS/tree/lua), library for reading/writting DREAMLANDS in Lua.
 
-We are currently on branch **python**.
+We are currently on branch **Z**.
 
 &nbsp;
 
