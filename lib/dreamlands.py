@@ -534,8 +534,11 @@ def __textToInstructs(text):
 
 
 		#case 2 : booleans
-		if value in ('true', 'false'):
-			instructs[-1][I__VALUE] = value
+		if value == "false":
+			instructs[-1][I__VALUE] = False
+			continue
+		if value == "true":
+			instructs[-1][I__VALUE] = True
 			continue
 
 

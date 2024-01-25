@@ -42,6 +42,7 @@ users:
 				brand:"Citroen"
 				km:200000
 				seats:7
+				regulator:false
 			cruiser:
 				brand:"Peugeot"
 				km:10000
@@ -49,6 +50,7 @@ users:
 				brand:"Range Rover"
 				km:100000
 				weight:1500.0 #in kg
+				regulator:true
 
 		motorcycles:
 			little:
