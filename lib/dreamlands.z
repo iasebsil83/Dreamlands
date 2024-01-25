@@ -101,29 +101,26 @@ mod Dreamlands {
 	TABULATION_CHARACTER = '\t'
 
 	//keys
-	KEYS_CHARACTERS_ALLOWED = string.ascii_letters + '_' + string.digits
+	KEYS_CHARACTERS_ALLOWED = ^Str.ALPHABET + '_' + ^Str.DIGITS
 
 	//escaped characters (text elements)
-	ESCAPED_CHARACTERS_MAP = {
-		'a' :'\a',
-		'b' :'\b',
-		'e' :'\x1b', // '\e' is not interpreted in python3
-		'f' :'\f',
-		'n' :'\n',
-		'r' :'\r',
-		't' :'\t',
-		'v' :'\v',
-		'\\':'\\',
-		'\'':'\'',
-		'\"':'\"'
+	ESCAPED_CHARACTERS = :[
+		'a' ='\a', 'b' ='\b', 'e' ='\e', 'f'='\f',
+		'n' ='\n', 'r' ='\r', 't' ='\t', 'v'='\v',
+		'\\'='\\', '\''='\'', '\"'='\"'
 	}
 
-	//some internal constants (must be accessible by several functions)
-	I__LINE_NBR  = 0
-	I__COLM_NBR  = 1
-	I__DEPTH     = 2
-	I__KEY       = 3
-	I__VALUE     = 4
+	//some internal structures
+	typ raw_instruct {
+		int line_nbr, int colm_nbr,
+		str raw_text,
+		str chr_text, str str_text
+	}
+	typ instruct {
+		int line_nbr, int colm_nbr,
+		byt depth,
+		str key,      atm value
+	}
 
 
 
@@ -142,285 +139,287 @@ mod Dreamlands {
 
 	// ---- DATA <-> TEXT ----
 
+	//instructs display
+	str ^.instruct.toStr() {
+		ret "^Dreamlands.instruct{" + \
+		typ.line_nbr.toStr() + ", " + \
+		typ.colm_nbr.toStr() + ", " + \
+		typ.depth.toStr()    + ", " + \
+		typ.key              + ", " + \
+		typ.value + "}"
+	}
+	str ^.raw_instruct.toStr() {
+		ret "^Dreamlands.raw_instruct{" + \
+		typ.line_nbr.toStr() + ", " + \
+		typ.colm_nbr.toStr() + ", " + \
+		typ.raw_text         + ", " + \
+		typ.chr_text         + ", " + \
+		typ.str_text + "}"
+	}
+
 	//error shortcut
-	voi __checkChrSize(int line_nbr, int colm_nbr, str current_buffer) {
-		'''
-		[INTERNAL FUNCTION] Check if a character can be added to the current state.
-
-		line_nbr:       int
-		colm_nbr:       int
-		current_buffer: str
-
-		Returns void.
-		'''
-
-		if len(current_buffer) != 0:
-			raise ValueError(
+	voi _checkChrSize(int line_nbr, int colm_nbr, str current_buffer) {
+		if current_buffer.length != 0l {
+			^Err.fatal(
 				"Only one character is allowed in character declaration (line " + \
-				str(line_nbr) + " column "                                      + \
-				str(colm_nbr) + ")."
+				line_nbr.toStr() + " column "                                   + \
+				colm_nbr.toStr() + ")."
 			)
+		}
 	}
 
 
 	//data <- from text
 	atm fromText(str text) {
-		'''
-		Convert a DREAMLANDS text into data structure.
-
-		text: str
-
-		Returns a data structure corresponding to the given DREAMLANDS text (dict/list).
-		'''
-
-		//get instruction list of current text
-		instructs = __textToInstructs(text)
+		instructs = ^._textToInstructs(text) //get instruction list of current text
 
 		//complete instruction set with external importations
-		i = 0
-		len_instructs = len(instructs)
+		i = 0l
 		importedFiles = []
-		while i < len_instructs:
-			if DEBUG_MODE:
-				print("[DEBUG] Completing instructs : [" + str(i) + "] = " + str(instructs[i]) + " len " + str(len_instructs))
+		whi i < instructs.length {
+			if ^.DEBUG_MODE {
+				^IO.println("[DEBUG] Completing instructs : [" + i.toStr() + "] = " + instructs[i].toStr() + " len " + instructs.length.toStr())
+			}
 
 			//importation detected => add it to current instructs
-			if instructs[i][I__DEPTH] < 0:
+			if instructs[i].depth < `00 {
 
 				//anti-recursivity check
-				if instructs[i][I__VALUE] in importedFiles:
-					raise RecursionError("Recursive importation detected : file '" + instructs[i][I__VALUE] + "' already imported once.")
-				importedFiles.append(instructs[i][I__VALUE])
+				if (instructs[i].value $ str) in importedFiles {
+					^Err.fatal("Recursive importation detected : file '" + (instructs[i].value $ str) + "' already imported once.")
+				}
+				importedFiles + (instructs[i].value $ str)
 
 				//read external file
-				f = open(instructs[i][I__VALUE], "r")
-				extText = f.read()
-				f.close()
+				extText = ^IO.readFile(instructs[i].value)
 
 				//get its instructions
-				extIns = __textToInstructs(extText)
-				len_extIns = len(extIns)
+				extIns = ^._textToInstructs(extText)
 
 				//for each imported instruction
-				for ei in range(len_extIns):
-					instructs.insert(i+ei, extIns[ei])
-				instructs.pop(i+len_extIns)
-
-				//re-calculate global length
-				len_instructs = len(instructs)
+				for ei in extIns {
+					instructs.insertBefore(i+ei, extIns[ei])
+				}
+				instructs.pop(i+extIns.length)
+			}
 
 			//increment (only on non-import instruction)
-			else:
-				i += 1
+			els { ++i }
+		}
 
 		//no data
-		if len(instructs) == 0:
-			return None
+		if instructs.length == 0l {
+			ret atm { 0s, null }
+		}
 
 		//check first element
-		if instructs[0][I__DEPTH] != 0:
-			raise IndentationError("Incorrect indent for first element : zero-depth is required.")
+		if instructs[0l].depth != `00 {
+			^Err.fatal("Incorrect indent for first element : zero-depth is required.")
+		}
 
 		//check last element parentality
-		if instructs[-1][I__VALUE] is None:
-			raise ValueError("Incorrect value for last element : child element required.")
+		if (instructs[-1l].value $ str).data == null {
+			^Err.fatal("Incorrect value for last element : child element required.")
+		}
 
 		//debug
-		if DEBUG_MODE:
-			print("[DEBUG] Completed instructs = [")
-			for i in instructs:
-				print("\t" + str(i) + ",")
-			print("]")
+		if ^.DEBUG_MODE {
+			^IO.println("[DEBUG] Completed instructs = [")
+			for i ovr instructs {
+				^IO.println("\t" + i.toStr() + ",")
+			}
+			^IO.println("]")
+		}
 
 		//finally translate instructions into data
-		_.instructsIndex = 0
-		return __instructsToData(instructs)
+		instructsIndex = 0l
+		ret ^._instructsToData(instructs)
 	}
 
 
 
 	//parsing
-	lst[] __textToInstructs(str text) {
-		'''
-		[INTERNAL FUNCTION] Parse raw text to an instruction list
-
-		text: str
-
-		Returns the list of instructions extracted from the text.
-		'''
+	lst[^.instruct] _textToInstructs(str text) {
 
 		// STEP 1 : SEPARATE INSTRUCTIONS
 
-		//some temporary constants (indexes inside raw_instructs list)
-		RI__LINE_NBR = 0
-		RI__COLM_NBR = 1
-		RI__RAW_TEXT = 2
-		RI__CHR_TEXT = 3
-		RI__STR_TEXT = 4
-
 		//field detection
 		inComment = false
-		inChr     = false
-		inStr     = false
+		inChr     = false; inStr = false
 		escaping  = false
 
 		//just separate instructions
 		raw_instructs = [
-			[1, 1, "", "", ""]
+			^.raw_instruct { 1, 1, "", "", "" }
 		]
 		line_nbr = 1
 		colm_nbr = 0
-		for c, char in enumerate(text):
-			colm_nbr += 1
-			if char == '\n':
-				line_nbr += 1
+		for c in text {
+			char = text[c]
+			++colm_nbr
+			if char == '\n' {
+				++line_nbr
 				colm_nbr  = 1
 				inComment = false
+			}
 
 			//get latest raw_instruct location for error messages (optimization shortcut)
-			latestRI_lineNbr = raw_instructs[-1][RI__LINE_NBR]
-			latestRI_colmNbr = raw_instructs[-1][RI__COLM_NBR]
+			latestRI_lineNbr = raw_instructs[-1l].line_nbr
+			latestRI_colmNbr = raw_instructs[-1l].colm_nbr
 
 
 
 			//case 1 : IN CHARACTER
-			if inChr:
+			if inChr {
 
 				//escaped sequences
-				if escaping:
-					__checkChrLen(
+				if escaping {
+					^._checkChrLen(
 						latestRI_lineNbr,
 						latestRI_colmNbr,
-						raw_instructs[-1][RI__CHR_TEXT]
+						raw_instructs[-1l].chr_text
 					)
 					escaping = false
-					try:
-						raw_instructs[-1][RI__CHR_TEXT] += ESCAPED_CHARACTER_MAP[char]
-					except KeyError:
-						__invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
+					if char in ^.ESCAPED_CHARACTERS.keys() {
+						raw_instructs[-1l].chr_text + ^.ESCAPED_CHARACTERS[char]
+					} els {
+						^._invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
+					}
+				}
 
 				//not escaping (reading normaly)
-				else:
+				els {
 
 					//start escaping
-					if char == '\\':
-						escaping = true
+					if char == '\\' { escaping = true }
 
 					//end of text field detection
-					elif char == '\'':
-						inChr = false
+					elf char == '\'' { inChr = false }
 
 					//regular character => add it
-					else:
-						__checkChrLen(
+					els {
+						^._checkChrLen(
 							latestRI_lineNbr,
 							latestRI_colmNbr,
-							raw_instructs[-1][RI__CHR_TEXT]
+							raw_instructs[-1l].chr_text
 						)
-						raw_instructs[-1][RI__CHR_TEXT] += char
+						raw_instructs[-1l].chr_text + char
+					}
+				}
+			}
 
 
 
 			//case 2 : IN STRING
-			elif inStr:
+			elf inStr {
 
 				//escaped sequences
-				if escaping:
+				if escaping {
 					escaping = false
-					try:
-						raw_instructs[-1][RI__STR_TEXT] += ESCAPED_CHARACTER_MAP[char]
-					except KeyError:
-						__invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
+					if char in ESCAPED_CHARACTERS.key() {
+						raw_instructs[-1l].str_text += ^.ESCAPED_CHARACTERS[char]
+					} els {
+						^._invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
+					}
+				}
 
 				//not escaping (reading normally)
-				else:
+				els {
 
 					//start escaping
-					if char == '\\':
-						escaping = true
+					if char == '\\' { escaping = true }
 
 					//end of text field detection
-					elif char == '\"':
-						inStr = false
+					elf char == '\"' { inStr = false }
 
 					//regular character => add it
-					else:
-						raw_instructs[-1][RI__STR_TEXT] += char
+					els { raw_instructs[-1l].str_text + char }
+				}
+			}
 
 
 
 			//case 3 : RAW TEXT
-			elif not inComment:
+			elf !inComment {
 
 				//field detection : comment
-				if char == COMMENT_CHARACTER:
-					inComment = true
+				if char == ^.COMMENT_CHARACTER { inComment = true }
 
 				//field detection : character
-				elif char == '\'':
+				elf char == '\'' {
 					inChr = true
 
 					//empty character (double character delimiter)
-					if len(text) > c+1 and text[c+1] == '\'':
-						raise ValueError(
+					if text.length > c+1 && text[c+1] == '\'' {
+						^Err.fatal(
 							"Empty characters are not supported (line " + \
-							str(latestRI_lineNbr) + " column "          + \
-							str(latestRI_colmNbr) + ")."
+							latestRI_lineNbr.toStr() + " column "       + \
+							latestRI_colmNbr.toStr() + ")."
 						)
+					}
+				}
 
 				//field detection : string
-				elif char == '\"':
+				elf char == '\"' {
 					inStr = true
 
 					//empty string (double string delimiter)
-					if len(text) > c+1 and text[c+1] == '\"':
-						raise ValueError(
+					if text.length > c+1 && text[c+1] == '\"' {
+						^Err.fatal(
 							"Empty strings are not supported (line " + \
-							str(latestRI_lineNbr) + " column "       + \
-							str(latestRI_colmNbr) + ")."
+							latestRI_lineNbr.toStr() + " column "    + \
+							latestRI_colmNbr.toStr() + ")."
 						)
+					}
+				}
 
 				//end of instruction => passing to the new one
-				elif char == LINE_END_CHARACTER:
-					raw_instructs.append(
-						[line_nbr, colm_nbr, "", "", ""]
-					)
+				elf char == ^.LINE_END_CHARACTER {
+					raw_instructs + ^.raw_instruct { line_nbr, colm_nbr, "", "", "" }
+				}
 
 				//add raw text to current instruction
-				else:
-					raw_instructs[-1][RI__RAW_TEXT] += char
+				els { raw_instructs[-1l].raw_text + char }
+			}
+		}
 
 		//missing text field delimiter
-		if inChr:
-			raise ValueError(
+		if inChr {
+			^Err.fatal(
 				"Missing character delimiter at end of declaration (line " + \
-				str(raw_instructs[-1][RI__LINE_NBR]) + " column "          + \
-				str(raw_instructs[-1][RI__COLM_NBR]) + ")."
+				raw_instructs[-1l].line_nbr.toStr() + " column "           + \
+				raw_instructs[-1l].colm_nbr.toStr() + ")."
 			)
-		if inStr:
-			raise ValueError(
+		}
+		if inStr {
+			^Err.fatal(
 				"Missing string delimiter at end of declaration (line " + \
-				str(raw_instructs[-1][RI__LINE_NBR]) + " column "       + \
-				str(raw_instructs[-1][RI__COLM_NBR]) + ")."
+				raw_instructs[-1l].line_nbr.toStr() + " column "        + \
+				raw_instructs[-1l].colm_nbr.toStr() + ")."
 			)
+		}
 
 		//remove additional spaces (optional)
-		if ADDITIONAL_SPACES_ALLOWED:
-			for a in range(len(raw_instructs)):
+		if ^.ADDITIONAL_SPACES_ALLOWED {
+			for a in raw_instructs {
 
-				//remove spaces in raw_instructs[a][RI__RAW_TEXT]
+				//remove spaces in raw_instructs[a].raw_text
 				ri_rawText = ""
-				for c in raw_instructs[a][RI__RAW_TEXT]:
-					if c != ' ':
-						ri_rawText += c
-				raw_instructs[a][RI__RAW_TEXT] = ri_rawText
+				for ovr in raw_instructs[a].raw_text {
+					if c != ' ' { ri_rawText + c }
+				}
+				raw_instructs[a].raw_text = ri_rawText
+			}
+		}
 
 		//debug
-		if DEBUG_MODE:
-			print("[DEBUG] raw_instructs = [")
-			for ri in raw_instructs:
-				print("\t" + str(ri) + ",")
-			print("]")
+		if ^.DEBUG_MODE {
+			^IO.println("[DEBUG] raw_instructs = [")
+			for ri ovr raw_instructs {
+				^IO.println("\t" + ri.toStr() + ",")
+			}
+			^IO.println("]")
+		}
 
 
 
@@ -431,119 +430,133 @@ mod Dreamlands {
 
 		//for each instruction
 		for ri in raw_instructs:
-			len_ri_raw_text = len(ri[RI__RAW_TEXT])
-			len_ri_chr_text = len(ri[RI__CHR_TEXT])
-			len_ri_str_text = len(ri[RI__STR_TEXT])
 
 
 
 			//phase 1 : PREPARATION & OBVIOUS CASES
 
 			//empty instruction => skip it
-			if len_ri_raw_text == 0 and len_ri_chr_text == 0 and len_ri_str_text == 0:
-				continue
+			if ri.raw_text.length == 0l && ri.chr_text.length == 0l && ri.str_text.length == 0l { ctn }
 
 			//both character & string declaration => NOT ALLOWED
-			if len_ri_chr_text != 0 and len_ri_str_text != 0:
-				raise ValueError(
+			if ri.chr_text.length != 0l && ri.str_text.length != 0l {
+				^Err.fatal(
 					"Could not have both character and string declaration in only one instruction (line " + \
-					str(ri[RI__LINE_NBR]) + " column "                                                    + \
-					str(ri[RI__COLM_NBR]) + ")."
+					ri.line_nbr.toStr() + " column "                                                      + \
+					ri.colm_nbr.toStr() + ")."
 				)
+			}
 
 
 
 			//phase 2 : IMPORTATIONS
 
 			//importation detected
-			if ri[RI__RAW_TEXT].startswith(NEW_FILE_CHARACTER):
+			if ri.raw_text.length != 0l && ri.raw_text[0] == ^.NEW_FILE_CHARACTER {
 
 				//add it if option enabled
-				if EXTERNAL_IMPORTATIONS_ALLOWED:
-					instructs.append([
-						ri[RI__LINE_NBR],    //line_nbr
-						ri[RI__COLM_NBR],    //colm_nbr
-						-1,                  //depth : negative means IMPORTATION FLAG
-						"",                  //key
-						ri[RI__RAW_TEXT][1:] //value : here, filename is stored
-					])
-
-				//else : ignore this instruction
-				continue
+				if ^.EXTERNAL_IMPORTATIONS_ALLOWED {
+					instructs + [
+						ri.line_nbr,
+						ri.colm_nbr,
+						`ff,            //depth : negative means IMPORTATION FLAG
+						0l,             //key
+						ri.raw_text[1:] //value : here, filename is stored
+					]
+				}
+				ctn //else : ignore this instruction
+			}
 
 			//not an importation => create a new empty instruction
-			else:
-				instructs.append([
-					ri[RI__LINE_NBR], //line_nbr
-					ri[RI__COLM_NBR], //colm_nbr
-					0,                //depth
-					"",               //key
-					None              //value (None also means : PARENT)
-				])
+			els {
+				instructs + ^.instruct {
+					ri.line_nbr,
+					ri.colm_nbr,
+					`00,          //depth
+					"",           //key
+					null          //value (null also means : PARENT)
+				}
+			}
 
 
 
 			//phase 3 : ANALYSIS
 
 			//set depth
-			for c in ri[RI__RAW_TEXT]:
-				if c == TABULATION_CHARACTER:
-					instructs[-1][I__DEPTH] += 1
-					ri[RI__RAW_TEXT] = ri[RI__RAW_TEXT][1:] //cut the 1st character
-				else:
-					break
+			for c ovr ri.raw_text {
+				if c == ^.TABULATION_CHARACTER {
+					++(instructs[-1l].depth)
+					ri.raw_text[1:] //cut the 1st character
+				} els { brk }
+			}
 
 			//separate key-value pair
-			pair = ri[RI__RAW_TEXT].split(SEPARATION_CHARACTER)
-			if len(pair) != 2:
-				raise ValueError(
+			pair = ri.raw_text.splitByChr(^.SEPARATION_CHARACTER)
+			if pair.length != 2 {
+				^Err.fatal(
 					"One separation character is required per instruction (line " + \
-					str(ri[RI__LINE_NBR]) + " column "                            + \
-					str(ri[RI__COLM_NBR]) + ")."
+					ri.line_nbr.toStr() + " column "                              + \
+					ri.colm_nbr.toStr() + ")."
 				)
-			instructs[-1][I__KEY] = pair[0]
-			value                 = pair[1]
+			}
+			instructs[-1l].key = pair[0l]
+			value              = pair[1l]
 
 			//check key name length
-			if len(instructs[-1][I__KEY]) == 0:
-				raise ValueError(
+			if instructs[-1l].key.length == 0l {
+				^Err.fatal(
 					"Missing key name : at least one character is required (line " + \
-					str(ri[RI__LINE_NBR]) + " column "                             + \
-					str(ri[RI__COLM_NBR]) + ")."
+					ri.line_nbr.toStr() + " column "                               + \
+					ri.colm_nbr.toStr() + ")."
 				)
+			}
 
 			//check key name
-			if instructs[-1][I__KEY] != '-':
-				for c in instructs[-1][I__KEY]:
-					if c not in KEYS_CHARACTERS_ALLOWED:
-						raise ValueError(
+			if instructs[-1l].key != '-' {
+				for c ovr instructs[-1l].key {
+					if c !in ^.KEYS_CHARACTERS_ALLOWED {
+						^Err.fatal(
 							"Invalid character in key name : use only [a-z], [A-Z], [0-9] & underscores (line " + \
-							str(ri[RI__LINE_NBR]) + " column "                                                  + \
-							str(ri[RI__COLM_NBR]) + ")."
+							ri.line_nbr.toStr() + " column "                                                    + \
+							ri.colm_nbr.toStr() + ")."
 						)
+					}
+				}
+			}
 
 
 
 			//case 1 : characters, strings or parent
-			if len(value) == 0:
+			if value.length == 0l {
 
 				//case 1.1 : character declaration
-				if len_ri_chr_text != 0:          //can only be 0 or 1
-					instructs[-1][I__VALUE] = ri[RI__CHR_TEXT][0]
+				if ri.chr_text.length != 0l { //can only be 0 or 1
+					instructs[-1l].value = atm {
+						atm.typ_chr,
+						(ri[RI__CHR_TEXT] $ str)[0]
+					}
+				}
 
 				//case 1.2 : string declaration
-				elif len_ri_str_text != 0:
-					instructs[-1][I__VALUE] = ri[RI__STR_TEXT]
+				elf ri.str_text.length != 0l {
+					instructs[-1l]value = atm {
+						atm.typ_str,
+						ri.str_text
+					}
+				}
 
 				//analysis terminated
-				continue
-
+				ctn
+			}
 
 
 			//case 2 : booleans
-			if value in ('true', 'false'):
-				instructs[-1][I__VALUE] = value
-				continue
+			if value == "false" {
+				instructs[-1].value = atm { atm.typ_boo, false }; ctn
+			}
+			if value == "true" {
+				instructs[-1].value = atm { atm.typ_boo, true }; ctn
+			}
 
 
 
@@ -551,55 +564,69 @@ mod Dreamlands {
 
 			//negative values
 			negative = false
-			if value[0] == '-':
+			if value[0] == '-' {
 				negative = true
 				value = value[1:] //cut negative sign (performance optimization)
+			}
 
 			//check every character of value
 			dotFound = false
-			for v in value:
-				if v == '.':
+			for v ovr value {
+				if v == '.' {
 
 					//dot already found => only one coma is allowed
-					if dotFound:
-						raise ValueError(
-							"Multiple dots found in floating point value for key '" + instructs[-1][I__KEY] + "' (line " + \
-							str(ri[RI__LINE_NBR]) + " column "                                                           + \
-							str(ri[RI__COLM_NBR]) + ")."
+					if dotFound {
+						^Err.fatal(
+							"Multiple dots found in floating point value for key '" + instructs[-1l].key + "' (line " + \
+							ri.line_nbr.toStr() + " column "                                                          + \
+							ri.colm_nbr.toStr() + ")."
 						)
+					}
 
 					//1st dot found
-					dotFound = true
-					continue
+					dotFound = true; ctn
+				}
 
 				//non-digit character => undefined value
-				if v not in string.digits:
-					raise ValueError(
-						"Undefined value for key '" + instructs[-1][I__KEY] + "' (line " + \
-						str(ri[RI__LINE_NBR]) + " column "                               + \
-						str(ri[RI__COLM_NBR]) + ")."
+				if v !in ^Str.DIGITS {
+					^Err.fatal(
+						"Undefined value for key '" + instructs[-1l].key + "' (line " + \
+						ri.line_nbr + " column "                                      + \
+						ri.colm_nbr + ")."
 					)
+				}
+			}
 
 			//floating point number
-			if dotFound:
-				instructs[-1][I__VALUE] = float(value)
+			if dotFound {
+				instructs[-1].value = atm {
+					atm.typ_flt,
+					value.toFlt()
+				}
 
 			//integer
-			else:
-				instructs[-1][I__VALUE] = int(value)
+			els {
+				instructs[-1][I__VALUE] = atm {
+					atm.typ_int,
+					value.toInt()
+				}
+			}
 
 			//apply negativity afterwards
-			if negative:
-				instructs[-1][I__VALUE] = -( instructs[-1][I__VALUE] )
+			if negative {
+				instructs[-1l].value.data = -(instructs[-1l].value.data $ int)
+			}
 
 		//debug
-		if DEBUG_MODE:
-			print("[DEBUG] instructs = [")
-			for i in instructs:
-				print("\t" + str(i) + ",")
-			print("]")
+		if ^.DEBUG_MODE {
+			^IO.println("[DEBUG] instructs = [")
+			for i in instructs {
+				^IO.println("\t" + i.toStr() + ",")
+			}
+			^IO.println("]")
+		}
 
-		return instructs
+		ret instructs
 	}
 
 
@@ -661,7 +688,7 @@ mod Dreamlands {
 			elif instructs[_.instructsIndex][I__DEPTH] == current_depth+1:
 
 				//children are processed by their parents (considerated as brothers between them)
-				raise ValueError(
+				^Err.fatal(
 					"Children element '" + instructs[_.instructsIndex][I__KEY] + "' detected but no parent declared (line " + \
 					str(instructs[_.instructsIndex][I__LINE_NBR]) + " column "                                              + \
 					str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
@@ -673,7 +700,7 @@ mod Dreamlands {
 				//list element (brothers must be of the same kind)
 				if data_isList:
 					if instructs[_.instructsIndex][I__KEY] != '-':
-						raise ValueError(
+						^Err.fatal(
 							"Key name '" + instructs[_.instructsIndex][I__KEY] + "' detected inside a list (line " + \
 							str(instructs[_.instructsIndex][I__LINE_NBR]) + " column "                             + \
 							str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
@@ -685,7 +712,7 @@ mod Dreamlands {
 				//non-list element (brothers must be of the same kind)
 				else:
 					if instructs[_.instructsIndex][I__KEY] == '-':
-						raise ValueError(
+						^Err.fatal(
 							"List element detected outside a list (line "              + \
 							str(instructs[_.instructsIndex][I__LINE_NBR]) + " column " + \
 							str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
@@ -694,7 +721,7 @@ mod Dreamlands {
 
 					//check key before adding brother
 					if key in data.keys():
-						raise ValueError(
+						^Err.fatal(
 							"Key '" + key + "' already defined in its parent (line "   + \
 							str(instructs[_.instructsIndex][I__LINE_NBR]) + " column " + \
 							str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
@@ -762,7 +789,7 @@ mod Dreamlands {
 
 		//case 4: element is None => ERROR
 		else:
-			raise ValueError("Unable to parse DREAMLANDS text, data contains None value(s).")
+			^Err.fatal("Unable to parse DREAMLANDS text, data contains None value(s).")
 	}
 
 	str toText(atm data) {
@@ -776,7 +803,7 @@ mod Dreamlands {
 
 		//check structure type
 		if not isinstance(data, dict) and not isinstance(data, tuple) and not isinstance(data, list):
-			raise ValueError("Could not parse DREAMLANDS text, data has incorrect type (dict, tuple or list allowed).")
+			^Err.fatal("Could not parse DREAMLANDS text, data has incorrect type (dict, tuple or list allowed).")
 
 		//parse data
 		return __elementToText(data, -1)[1:] //skip 1st character (useless LINE_END_CHARACTER in global context)
