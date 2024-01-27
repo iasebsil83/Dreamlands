@@ -185,10 +185,10 @@ mod Dreamlands {
 			if instructs[i].depth < `00 {
 
 				//anti-recursivity check
-				if (instructs[i].value $ str) in importedFiles {
+				if (instructs[i].value.data $ str) in importedFiles {
 					^Err.fatal("Recursive importation detected : file '" + (instructs[i].value $ str) + "' already imported once.")
 				}
-				importedFiles + (instructs[i].value $ str)
+				importedFiles + (instructs[i].value.data $ str)
 
 				//read external file
 				extText = ^IO.readFile(instructs[i].value)
@@ -209,7 +209,7 @@ mod Dreamlands {
 
 		//no data
 		if instructs.length == 0l {
-			ret atm { 0s, null }
+			ret atm { atm.typ_ptr, null }
 		}
 
 		//check first element
@@ -218,7 +218,7 @@ mod Dreamlands {
 		}
 
 		//check last element parentality
-		if (instructs[-1l].value $ str).data == null {
+		if instructs[-1l].value.data == null {
 			^Err.fatal("Incorrect value for last element : child element required.")
 		}
 
@@ -232,7 +232,7 @@ mod Dreamlands {
 		}
 
 		//finally translate instructions into data
-		instructsIndex = 0l
+		^.instructsIndex = 0l
 		ret ^._instructsToData(instructs)
 	}
 
@@ -280,7 +280,7 @@ mod Dreamlands {
 						raw_instructs[-1l].chr_text
 					)
 					escaping = false
-					if char in ^.ESCAPED_CHARACTERS.keys() {
+					if char in ^.ESCAPED_CHARACTERS.keys {
 						raw_instructs[-1l].chr_text + ^.ESCAPED_CHARACTERS[char]
 					} els {
 						^._invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
@@ -316,7 +316,7 @@ mod Dreamlands {
 				//escaped sequences
 				if escaping {
 					escaping = false
-					if char in ESCAPED_CHARACTERS.key() {
+					if char in ESCAPED_CHARACTERS.keys {
 						raw_instructs[-1l].str_text += ^.ESCAPED_CHARACTERS[char]
 					} els {
 						^._invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
@@ -472,9 +472,9 @@ mod Dreamlands {
 				instructs + ^.instruct {
 					ri.line_nbr,
 					ri.colm_nbr,
-					`00,          //depth
-					"",           //key
-					null          //value (null also means : PARENT)
+					`00,                      //depth
+					"",                       //key
+					atm { atm.typ_ptr, null } //value (also means : PARENT)
 				}
 			}
 
@@ -533,13 +533,13 @@ mod Dreamlands {
 				if ri.chr_text.length != 0l { //can only be 0 or 1
 					instructs[-1l].value = atm {
 						atm.typ_chr,
-						(ri[RI__CHR_TEXT] $ str)[0]
+						ri.chr_text[0]
 					}
 				}
 
 				//case 1.2 : string declaration
 				elf ri.str_text.length != 0l {
-					instructs[-1l]value = atm {
+					instructs[-1l].value = atm {
 						atm.typ_str,
 						ri.str_text
 					}
@@ -566,7 +566,7 @@ mod Dreamlands {
 			negative = false
 			if value[0] == '-' {
 				negative = true
-				value = value[1:] //cut negative sign (performance optimization)
+				value[1:] //cut negative sign (performance optimization)
 			}
 
 			//check every character of value
@@ -591,22 +591,22 @@ mod Dreamlands {
 				if v !in ^Str.DIGITS {
 					^Err.fatal(
 						"Undefined value for key '" + instructs[-1l].key + "' (line " + \
-						ri.line_nbr + " column "                                      + \
-						ri.colm_nbr + ")."
+						ri.line_nbr.toStr() + " column "                              + \
+						ri.colm_nbr.toStr() + ")."
 					)
 				}
 			}
 
 			//floating point number
 			if dotFound {
-				instructs[-1].value = atm {
+				instructs[-1l].value = atm {
 					atm.typ_flt,
 					value.toFlt()
 				}
 
 			//integer
 			els {
-				instructs[-1][I__VALUE] = atm {
+				instructs[-1l].value = atm {
 					atm.typ_int,
 					value.toInt()
 				}
@@ -620,7 +620,7 @@ mod Dreamlands {
 		//debug
 		if ^.DEBUG_MODE {
 			^IO.println("[DEBUG] instructs = [")
-			for i in instructs {
+			for i ovr instructs {
 				^IO.println("\t" + i.toStr() + ",")
 			}
 			^IO.println("]")
@@ -632,181 +632,167 @@ mod Dreamlands {
 
 
 	//translate intructions into data
-	atm __getFullValue(lst[] instructs, int current_depth) {
-		'''
-		[INTERNAL FUNCTION] Get value of instruction even if it is a parent.
-		This function is 2-times recursive with __instructsToData().
-
-		instructs: list
-
-		Returns data structure (list, dictionnary, or raw element).
-		'''
+	atm _getFullValue(lst[^.instruct] instructs, int current_depth) { //2-times recursive with ^._instructsToData().
 
 		//get brother value : if parent, first process its children
-		value = instructs[_.instructsIndex][I__VALUE]
-		_.instructsIndex += 1
-		if value is None:
-			value = __instructsToData(instructs, current_depth+1)
+		value = instructs[^.instructsIndex].value
+		++^.instructsIndex
+		if value.type = 0l {
+			value = ^._instructsToData(instructs, current_depth+1)
+		}
 
-		return value
+		ret value
 	}
 
-	atm __instructsToData(lst[] instructs, int current_depth=0) {
-		'''
-		[INTERNAL FUNCTION] Translates an instruction list into data structure.
-		This function is 2-times recursive with __getFullValue().
-
-		instructs: list
-
-		Returns data structure (list or dictionnary).
-		'''
+	atm _instructsToData(lst[^.instruct] instructs, int current_depth=0) { //2-times recursive with ^._getFullValue().
 
 		//1st instruction is a list element => global data will be a list
-		data_isList = (instructs[_.instructsIndex][I__KEY] == '-')
-		if data_isList:
-			data = []
-		else:
-			data = {} //else, a dictionnary
+		data_isList = instructs[^.instructsIndex].key == '-'
+		if data_isList {
+			data = atm { atm.typ_lst,  [] }
+		} els {
+			data = atm { atm.typ_map, :[] } //else, a map[str,atm]
+		}
 
-		//for each instruction (mind that instructsIndex is NOT incremented in general scope of loop but in statements)
-		instructs_len = len(instructs)
-		while _.instructsIndex < instructs_len:
+		//for each instruction (mind that ^.instructsIndex is NOT incremented in general scope of loop but in statements)
+		whi ^.instructsIndex < instructs.length {
 
 			//debug
-			if DEBUG_MODE:
-				print("[DEBUG] translating into data " + str(instructs[_.instructsIndex]) + "  instructsIndex " + str(_.instructsIndex) + ".")
+			if ^.DEBUG_MODE {
+				^IO.println("[DEBUG] translating into data " + instructs[^.instructsIndex].toStr() + "  instructsIndex " + ^.instructsIndex.toStr() + ".")
+			}
 
 			//case 1 : too much indent
-			if instructs[_.instructsIndex][I__DEPTH] > current_depth+1:
-				raise IndentationError(
-					"Too much indent for instruct '" + instructs[_.instructsIndex][I__KEY] + "' (line " + \
-					str(instructs[_.instructsIndex][I__LINE_NBR]) + " column "                          + \
-					str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+			if instructs[^.instructsIndex].depth > current_depth+1 {
+				^Err.fatal(
+					"Too much indent for instruct '" + instructs[^.instructsIndex].key + "' (line " + \
+					instructs[^.instructsIndex].line_nbr.toStr() + " column "                       + \
+					instructs[^.instructsIndex].colm_nbr.toStr() + ")."
 				)
+			}
 
 			//case 2 : child element
-			elif instructs[_.instructsIndex][I__DEPTH] == current_depth+1:
+			elf instructs[^.instructsIndex].depth == current_depth+1 {
 
 				//children are processed by their parents (considerated as brothers between them)
 				^Err.fatal(
-					"Children element '" + instructs[_.instructsIndex][I__KEY] + "' detected but no parent declared (line " + \
-					str(instructs[_.instructsIndex][I__LINE_NBR]) + " column "                                              + \
-					str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+					"Children element '" + instructs[^.instructsIndex].key + "' detected but no parent declared (line " + \
+					instructs[^.instructsIndex].line_nbr.toStr() + " column "                                           + \
+					instructs[^.instructsIndex].colm_nbr.toStr() + ")."
 				)
+			}
 
 			//case 3 : brother element
-			elif instructs[_.instructsIndex][I__DEPTH] == current_depth:
+			elf instructs[^.instructsIndex].depth == current_depth {
 
 				//list element (brothers must be of the same kind)
-				if data_isList:
-					if instructs[_.instructsIndex][I__KEY] != '-':
+				if data_isList {
+					if instructs[^.instructsIndex].key != '-' {
 						^Err.fatal(
-							"Key name '" + instructs[_.instructsIndex][I__KEY] + "' detected inside a list (line " + \
-							str(instructs[_.instructsIndex][I__LINE_NBR]) + " column "                             + \
-							str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+							"Key name '" + instructs[^.instructsIndex].key + "' detected inside a list (line " + \
+							instructs[^.instructsIndex].line_nbr.toStr() + " column "                          + \
+							instructs[^.instructsIndex].colm_nbr.toStr() + ")."
 						)
+					}
 
 					//add brother element next to the current one
-					data.append( __getFullValue(instructs, current_depth) )
+					(data.data $ lst) + ^._getFullValue(instructs, current_depth)
+				}
 
 				//non-list element (brothers must be of the same kind)
-				else:
-					if instructs[_.instructsIndex][I__KEY] == '-':
+				els {
+					if instructs[^.instructsIndex].key == '-' {
 						^Err.fatal(
-							"List element detected outside a list (line "              + \
-							str(instructs[_.instructsIndex][I__LINE_NBR]) + " column " + \
-							str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+							"List element detected outside a list (line "             + \
+							instructs[^.instructsIndex].line_nbr.toStr() + " column " + \
+							instructs[^.instructsIndex].colm_nbr.toStr() + ")."
 						)
-					key = instructs[_.instructsIndex][I__KEY]
+					}
+					key = instructs[^.instructsIndex].key
 
 					//check key before adding brother
-					if key in data.keys():
+					if key in (data.data $ map).keys {
 						^Err.fatal(
-							"Key '" + key + "' already defined in its parent (line "   + \
-							str(instructs[_.instructsIndex][I__LINE_NBR]) + " column " + \
-							str(instructs[_.instructsIndex][I__COLM_NBR]) + ")."
+							"Key '" + key + "' already defined in its parent (line "  + \
+							instructs[^.instructsIndex].line_nbr.toStr() + " column " + \
+							instructs[^.instructsIndex].colm_nbr.toStr() + ")."
 						)
+					}
 
 					//add brother element next to the current one (get value even recursively)
-					data[key] = __getFullValue(instructs, current_depth)
+					(data.data $ map)[key] = ^._getFullValue(instructs, current_depth)
+				}
+			}
 
 			//case 4 : brother element of a parent (an uncle / grand-uncle / ...) => not of our business (end of child block)
-			else:
-				return data
+			els { ret data }
+		}
 
-		return data
+		ret data
 	}
 
 
 
 	//data -> to text
-	str __elementToText(atm elem, int depth) {
-		'''
-		[INTERNAL FUNCTION] Convert a data element into DREAMLANDS text.
-		This function is recursive.
-
-		data: dict, tuple, list
-		depth: int
-
-		Returns a chunk of DREAMLANDS text corresponding to the given data.
-		'''
+	str ^._elementToText(atm elem, int depth) { //recursive
 		newDepth = depth+1
+		swi elem.type {
 
-		//case 1: [PARENT] element is a dictionnary
-		if isinstance(elem, dict):
-			text = LINE_END_CHARACTER
-			for k in elem.keys():
-				text += newDepth*TABULATION_CHARACTER + k + SEPARATION_CHARACTER + __elementToText(elem[k], newDepth)
-			return text
+			//map [PARENT]
+			atm.typ_map {
+				text = ^.LINE_END_CHARACTER
+				for k ovr (elem.data $ map).keys {
+					text += newDepth * ^.TABULATION_CHARACTER + k + ^.SEPARATION_CHARACTER + ^._elementToText(elem.data$lst[k], newDepth)
+				}
+				ret text
+			}
 
-		//case 2: [PARENT] element is a tuple/list
-		elif isinstance(elem, tuple) or isinstance(elem, list):
-			text = LINE_END_CHARACTER
-			for e in elem:
-				text += newDepth*TABULATION_CHARACTER + '-' + SEPARATION_CHARACTER + __elementToText(e, newDepth)
-			return text
+			//list [PARENT]
+			atm.typ_lst {
+				text = ^.LINE_END_CHARACTER
+				for e ovr elem.data$lst {
+					text += newDepth * ^.TABULATION_CHARACTER + '-' + ^.SEPARATION_CHARACTER + ^._elementToText(e, newDepth)
+				}
+				ret text
+			}
 
-		//case 3: [CHILD] element is standalone
-		elif elem is not None:
+			//boolean [CHILD]
+			atm.typ_boo {
+				if elem.data$boo { ret "true"  + ^.LINE_END_CHARACTER }
+				                   ret "false" + ^.LINE_END_CHARACTER
+			}
 
-			//special case 3.1: boolean
-			if isinstance(elem, bool):
-				if elem:
-					return "true" + LINE_END_CHARACTER
-				return "false" + LINE_END_CHARACTER
+			//strings [CHILD]
+			atm.typ_str {
+				ret '\"' + (elem.data$str) + '\"' + ^.LINE_END_CHARACTER
+			}
 
-			//special case 3.2: strings
-			elif isinstance(elem, str):
+			//long integer [CHILD]
+			atm.typ_lng {
+				ret (elem.data$lng).toStr() + ^.LINE_END_CHARACTER
+			}
 
-				//python characters optimization
-				if PYTHON_CHARACTERS_OPTIMIZATION:
-					if len(elem) == 1:
-						return "\'" + str(elem) + "\'" + LINE_END_CHARACTER
-				return "\"" + str(elem) + "\"" + LINE_END_CHARACTER
+			//double floating point [CHILD]
+			atm.typ_dbl {
+				ret (elem.data$dbl).toStr() + ^.LINE_END_CHARACTER
+			}
 
-			//regular case 3.3: other [integer (including negative sign), floating point number (including negative sign)]
-			return str(elem) + LINE_END_CHARACTER
-
-		//case 4: element is None => ERROR
-		else:
-			^Err.fatal("Unable to parse DREAMLANDS text, data contains None value(s).")
+			//unauthorized type
+			def {
+				^Err.fatal("Unable to generate DREAMLANDS text, data contains unauthorized types.")
+			}
+		}
 	}
 
 	str toText(atm data) {
-		'''
-		Convert a data structure into DREAMLANDS text.
-
-		data: dict, tuple, list
-
-		Returns a DREAMLANDS text corresponding to the given data.
-		'''
 
 		//check structure type
-		if not isinstance(data, dict) and not isinstance(data, tuple) and not isinstance(data, list):
-			^Err.fatal("Could not parse DREAMLANDS text, data has incorrect type (dict, tuple or list allowed).")
+		if data.type != atm.typ_map && data.type != atm.typ_lst {
+			^Err.fatal("Could not generate DREAMLANDS text, data has incorrect type (map or lst allowed only).")
+		}
 
 		//parse data
-		return __elementToText(data, -1)[1:] //skip 1st character (useless LINE_END_CHARACTER in global context)
+		ret ^._elementToText(data, -1)[1:] //skip 1st character (useless LINE_END_CHARACTER in global context)
 	}
 
 
@@ -816,44 +802,15 @@ mod Dreamlands {
 
 	// ---- READ / WRITE ----
 
-	//read text from file => return data as dict
+	//read text from file => return data as atm
 	atm read(str filename) {
-		'''
-		Read a DREAMLANDS file.
-
-		filename: str
-
-		Returns a dictionnary representing the data read from the file.
-		'''
-
-		//read text from file
-		f = open(filename, "r")
-		text = f.read()
-		f.close()
-
-		//parse
-		return fromText(text)
+		ret ^.fromText(^IO.readFile(filename))
 	}
 
 
 
 	//write data into file
 	voi write(str filename, atm data) {
-		'''
-		Write data into a DREAMLANDS file.
-
-		data: dict
-		filename: str
-
-		Write the data respecting the DREAMLANDS syntax.
-		'''
-
-		//unparse
-		text = toText(data)
-
-		//write out
-		f = open(filename, "w")
-		f.write(text)
-		f.close()
+		^IO.writeFile(filename, ^.toText(data))
 	}
 }
