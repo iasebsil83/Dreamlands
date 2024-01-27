@@ -73,9 +73,6 @@ mod Dreamlands {
 	//allow external files importation (if false, importations will be skipped)
 	EXTERNAL_IMPORTATIONS_ALLOWED = true
 
-	//python character optimization (if true, python strings of 1 character long will be interpreted as characters)
-	PYTHON_CHARACTERS_OPTIMIZATION = true // This is only applicable in function toText()
-
 
 
 
