@@ -28,7 +28,7 @@ We are currently on branch **master**.
 
 
 
-## I] Objective
+## I] Overview
 
 This language is inspired on the basics of the [YAML](https://yaml.org).
 
