@@ -288,7 +288,7 @@ def __textToInstructs(text):
 				)
 				escaping = False
 				try:
-					raw_instructs[-1][RI__CHR_TEXT] += ESCAPED_CHARACTER_MAP[char]
+					raw_instructs[-1][RI__CHR_TEXT] += ESCAPED_CHARACTERS_MAP[char]
 				except KeyError:
 					__invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
 
@@ -321,7 +321,7 @@ def __textToInstructs(text):
 			if escaping:
 				escaping = False
 				try:
-					raw_instructs[-1][RI__STR_TEXT] += ESCAPED_CHARACTER_MAP[char]
+					raw_instructs[-1][RI__STR_TEXT] += ESCAPED_CHARACTERS_MAP[char]
 				except KeyError:
 					__invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
 
