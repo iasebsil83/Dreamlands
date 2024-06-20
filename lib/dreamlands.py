@@ -137,7 +137,7 @@ class _:
 # ---- DATA <-> TEXT ----
 
 #error shortcut
-def __checkChrSize(line_nbr, colm_nbr, current_buffer):
+def __checkChrLen(line_nbr, colm_nbr, current_buffer):
 	'''
 	[INTERNAL FUNCTION] Check if a character can be added to the current state.
 
@@ -147,13 +147,27 @@ def __checkChrSize(line_nbr, colm_nbr, current_buffer):
 
 	Returns void.
 	'''
-
 	if len(current_buffer) != 0:
 		raise ValueError(
 			"Only one character is allowed in character declaration (line " + \
 			str(line_nbr) + " column "                                      + \
 			str(colm_nbr) + ")."
 		)
+
+def __invalidEscChr(line_nbr, colm_nbr, char):
+	'''
+	[INTERNAL FUNCTION] .
+
+	linr_nbr: int
+	colm_nbr: int
+
+	Returns void.
+	'''
+	raise ValueError(
+		"Invalid escaped character found with value " + str(int(char)) + ". (line " + \
+		str(line_nbr) + " column " + \
+		str(colm_nbr) + ")."
+	)
 
 
 
@@ -290,7 +304,7 @@ def __textToInstructs(text):
 				try:
 					raw_instructs[-1][RI__CHR_TEXT] += ESCAPED_CHARACTERS_MAP[char]
 				except KeyError:
-					__invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
+					__invalidEscChr(latestRI_lineNbr, latestRI_colmNbr, char)
 
 			#not escaping (reading normaly)
 			else:
@@ -323,7 +337,7 @@ def __textToInstructs(text):
 				try:
 					raw_instructs[-1][RI__STR_TEXT] += ESCAPED_CHARACTERS_MAP[char]
 				except KeyError:
-					__invalidEscChr(latestRI_lineNbr, latestRI_colmNbr)
+					__invalidEscChr(latestRI_lineNbr, latestRI_colmNbr, char)
 
 			#not escaping (reading normally)
 			else:
