@@ -1,4 +1,4 @@
-package example
+//package example
 
 
 
@@ -8,7 +8,7 @@ package example
 // ---- IMPORTATIONS ----
 
 //add library path
-import dreamlands
+//import dreamlands.Dreamlands
 
 
 
@@ -18,8 +18,46 @@ import dreamlands
 // ---- UTILITIES ----
 
 //print data structures prettier
-def prettyPrint(data):
-	print(json.dumps(data, indent=4))
+fun prettyPrint(data:Any?, depth:Int=0) {
+	val indent = '\t'*depth
+
+	//maps
+	if(data is MutableMap<*,*>){
+		println('{')
+		val m = (data as MutableMap<String,Any?>)
+		for(e in m.keys){
+			print(indent + "\t\"" + e + "\":")
+			prettyPrint(m[e], depth+1)
+			println(',')
+		}
+		println(indent + '}')
+
+	//lists
+	}else if(data is MutableList<*>){
+		val l = (data as MutableList<Any?>)
+		println('[')
+		for(e in l){
+			print(indent + '\t')
+			prettyPrint(e, depth+1)
+			println(',')
+		}
+		println(indent + ']')
+
+	//other non null
+	}else if(data != null){
+		when(data){
+			is Boolean -> print((data as Boolean).toString())
+			is Int     -> print((data as Int).toString())
+			is Double  -> print((data as Double).toString())
+			is Char    -> print("'" + (data as Char) + "'")
+			is String  -> print("\"" + (data as String) + "\"")
+		}
+
+	//null
+	}else{
+		print("(NULL ELEMENT)")
+	}
+}
 
 
 
@@ -29,17 +67,17 @@ def prettyPrint(data):
 // ---- EXECUTION ----
 
 //main
-public fun main(args) {
+fun main() {
 
 	// EXAMPLE 1 : READING
 
 	//read a dreamlands file
-	data = Dreamlands.read("vehicles1.dl")
+	var data = Dreamlands.read("example/vehicles1.dl")
 
 	//display parsed content
-	print("EXAMPLE 1 : Data read from \'vehicles1.dl\' : ")
+	println("EXAMPLE 1 : Data read from \'vehicles1.dl\' : ")
 	prettyPrint(data)
-	print()
+	println()
 
 
 
@@ -47,58 +85,58 @@ public fun main(args) {
 	// EXAMPLE 2 : WRITING
 
 	//create a new data structure
-	new_data_dict = {
+	var new_data_dict = mutableMapOf(
 
 		//small devices
-		'smartphone':{
+		"smartphone" to mutableMapOf<String,Any?>(
 	        //         in mAh
-			'battery':4000.0,
-			'OS'     :"Android"
-		},
+			"battery" to 4000.0,
+			"OS"      to "Android"
+		),
 
 		//big devices
-		'computer':{
-			'name':"Nitro",
-			'CPU':{
-				'brand'   :"AMD",
-				'core_nbr':16
-			},
-			'GPU':{
-				'brand':"Nvidia",
-	            //       100 000 000 000 = 100G
-				'flops':100000000000,
-				'compatibility':[
+		"computer" to mutableMapOf<String,Any?>(
+			"name" to "Nitro",
+			"CPU"  to mutableMapOf<String,Any?>(
+				"brand"    to "AMD",
+				"core_nbr" to 16
+			),
+			"GPU" to mutableMapOf<String,Any?>(
+				"brand" to "Nvidia",
+	            //         100 000 000 000 = 100G
+				"flops" to 100000000000,
+				"compatibility" to mutableListOf<Any?>(
 					"GNU/Linux",
 					"Windows",
 					"MacOSX"
-				]
-			},
+				)
+			),
 
 			//users
-			'users':[
+			"users" to mutableListOf<Any?>(
 
 				//users information (as 1st element of list)
-				{
-					'users_nbr':2,
-					'titles'   :[ "First Name", "Last Name", "Sex", "Age", "Size" ]
-				},
+				mutableMapOf<String,Any?>(
+					"users_nbr" to 2,
+					"titles"    to mutableListOf<Any?>("First Name", "Last Name", "Sex", "Age", "Size")
+				),
 
 				//undefined user
-				False,
+				false,
 
 	  			//users                 (sex)          (in cm)
 				//1st name,  last name, is male?, age, size
-				['Michel', 'GARLIC',   True,     17,  1.77],
-				['Andrea', 'PARMESAN', False,    28,  1.61]
-			]
-		}
-	}
+				mutableListOf<Any?>("Michel", "GARLIC",   true,     17,  1.77),
+				mutableListOf<Any?>("Andrea", "PARMESAN", false,    28,  1.61)
+			)
+		)
+	)
 
 	//get dreamlands text equivalent
-	print("EXAMPLE 2 : Writing :")
+	println("EXAMPLE 2 : Writing :")
 	prettyPrint(new_data_dict)
-	print("in file 'devices.dl'.")
+	println("in file 'devices.dl'.")
 
 	//write into a dreamlands file
-	dl.write(new_data_dict, "devices.dl")
+	Dreamlands.write(new_data_dict, "example/devices.dl")
 }

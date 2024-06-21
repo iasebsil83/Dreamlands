@@ -1,4 +1,4 @@
-package dreamlands
+//package dreamlands
 
 
 
@@ -42,20 +42,28 @@ package dreamlands
 
 //importations
 import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 
 
 
 
-//generic shortcut tool
+//generic tools
 public operator fun Char.times(count:Int) : String {
 	return this.toString().repeat(count)
 }
+
+public dirname(p:String){
+	var lastSeparator = p.findLast { it == '/' }
+	if(lastSeparator == null){ return "" }
+	return p.substring(0, lastSeparator-1)
+}
+
 
 
 
 //class definition
 class Dreamlands {
-
 	companion object {
 
 
@@ -96,15 +104,19 @@ class Dreamlands {
 		val KEYS_CHARACTERS_ALLOWED = ('a'..'z') + ('A'..'Z') + '_' + ('0'..'9')
 
 		//escaped characters (text elements)
+		val ESCAPED_CHARACTERS_NONASCII = String(
+			byteArrayOf(0x07, 0x1b, 0x0c, 0x0b),
+			Charsets.UTF_8
+		)
 		val ESCAPED_CHARACTERS_MAP = mapOf(
-			'a'  to (0x07 as Char),
+			'a'  to ESCAPED_CHARACTERS_NONASCII[0],
 			'b'  to '\b',
-			'e'  to (0x1b as Char),
-			'f'  to (0x0c as Char),
+			'e'  to ESCAPED_CHARACTERS_NONASCII[1],
+			'f'  to ESCAPED_CHARACTERS_NONASCII[2],
 			'n'  to '\n',
 			'r'  to '\r',
 			't'  to '\t',
-			'v'  to (0x0b as Char),
+			'v'  to ESCAPED_CHARACTERS_NONASCII[3],
 			'\\' to '\\',
 			'\'' to '\'',
 			'\"' to '\"'
@@ -210,6 +222,7 @@ class Dreamlands {
 			//complete instruction set with external importations
 			var i = 0
 			var importedFiles = mutableListOf<String>()
+			var lastCWD       = Paths.get("").toAbsolutePath().toString()
 			while(i < instructs.size){
 				if(Dreamlands.DEBUG_MODE){
 					println("[DEBUG] Completing instructs : [" + i.toString() + "] = " + instructs[i].toString() + " len " + instructs.size.toString())
@@ -218,14 +231,26 @@ class Dreamlands {
 				//importation detected => add it to current instructs
 				if(instructs[i].depth < 0){
 
-					//anti-recursivity check
-					if((instructs[i].value as String) in importedFiles){
-						throw RuntimeException("Recursive importation detected : file '" + (instructs[i].value as String) + "' already imported once.")
+					//read path
+					val extValue    = instructs[i].value as String
+					val extFullPath : String
+					if(extFullPath.startsWith('/')){ //absolute
+						extFullPath = extValue
+					}else{                           //relative
+						extFullPath = lastCWD + '/' + extValue
 					}
-					importedFiles.add(instructs[i].value as String)
+
+					//anti-recursivity check
+					if(extFullPath in importedFiles){
+						throw RuntimeException("Recursive importation detected : file '" + extFullPath + "' already imported once.")
+					}
+					importedFiles.add(extFullPath)
+
+					//update last CWD
+					val lastCWD = 
 
 					//read external file
-					val extIns = Dreamlands.textToInstructs( File(instructs[i].value as String).readText() )
+					val extIns = Dreamlands.textToInstructs( File(extFullPath).readText() )
 
 					//for each imported instruction
 					for(ei in 0 until extIns.size){
@@ -794,18 +819,20 @@ class Dreamlands {
 					is String -> return "\"" + (elem as String) + "\"" + Dreamlands.LINE_END_CHARACTER
 
 					//regular case 3.4: floating point number (including negative sign)
-					is Float  -> return (elem as Float).toString()  + Dreamlands.LINE_END_CHARACTER
 					is Double -> return (elem as Double).toString() + Dreamlands.LINE_END_CHARACTER
 
 					//regular case 3.5: integer values (including negative sign)
-					is Byte   -> return (elem as Byte).toString()   + Dreamlands.LINE_END_CHARACTER
+					is Int    -> return (elem as Int).toString()    + Dreamlands.LINE_END_CHARACTER
+
+					/*is Byte   -> return (elem as Byte).toString()   + Dreamlands.LINE_END_CHARACTER
 					is UByte  -> return (elem as UByte).toString()  + Dreamlands.LINE_END_CHARACTER
 					is Short  -> return (elem as Short).toString()  + Dreamlands.LINE_END_CHARACTER
-					is UShort -> return (elem as UShort).toString() + Dreamlands.LINE_END_CHARACTER
-					is Int    -> return (elem as Int).toString()    + Dreamlands.LINE_END_CHARACTER
+					is UShort -> return (elem as UShort).toString() + Dreamlands.LINE_END_CHARACTER <==== DISABLED FOR THE MOMENT
 					is UInt   -> return (elem as UInt).toString()   + Dreamlands.LINE_END_CHARACTER
 					is Long   -> return (elem as Long).toString()   + Dreamlands.LINE_END_CHARACTER
 					is ULong  -> return (elem as ULong).toString()  + Dreamlands.LINE_END_CHARACTER
+					is Float  -> return (elem as Float).toString()  + Dreamlands.LINE_END_CHARACTER*/
+
 					else -> throw RuntimeException("Unable to parse DREAMLANDS text, data contains value(s) of undefined type.")
 				}
 
