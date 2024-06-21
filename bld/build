@@ -1,0 +1,25 @@
+#!/bin/bash
+
+
+
+
+# -------- DECLARATIONS -------
+
+#paths
+CXD=$(dirname $(realpath $0))
+
+
+
+
+
+
+# -------- EXECUTION --------
+
+#compile
+cd $CXD/..
+rm run.jar
+kotlinc -include-runtime lib/dreamlands.kt example/run.kt -d run.jar
+
+#create runable
+echo -e "#!/bin/bash\njava -jar run.jar" > run
+chmod a+x run
