@@ -86,7 +86,7 @@ BLANKS = (' ', '\t')
 
 # ---- CONSTANTS ----
 
-#special characters
+#special characters (defaults)
 COMMENT_CHARACTER    = '#'
 LINE_END_CHARACTER   = '\n'
 NEW_FILE_CHARACTER   = '>'
@@ -172,7 +172,22 @@ def __invalidEscChr(line_nbr, colm_nbr, char):
 
 
 #data <- from text
-def fromText(text):
+def fromText(
+	text,
+
+	#characters
+	comment_character    = COMMENT_CHARACTER,
+	lineEnd_character    = LINE_END_CHARACTER,
+	newFile_character    = NEW_FILE_CHARACTER,
+	separation_character = SEPARATION_CHARACTER,
+	tabulation_character = TABULATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed     = ADDITIONAL_SPACES_ALLOWED,
+	debugMode                    = DEBUG_MODE,
+	externalImportationsAllowed  = EXTERNAL_IMPORTATIONS_ALLOWED,
+	pythonCharactersOptimization = PYTHON_CHARACTERS_OPTIMIZATION
+):
 	'''
 	Convert a DREAMLANDS text into data structure.
 
@@ -182,14 +197,29 @@ def fromText(text):
 	'''
 
 	#get instruction list of current text
-	instructs = __textToInstructs(text)
+	instructs = __textToInstructs(
+		text,
+
+		#characters
+		comment_character    = comment_character,
+		lineEnd_character    = lineEnd_character,
+		newFile_character    = newFile_character,
+		separation_character = separation_character,
+		tabulation_character = tabulation_character,
+
+		#options
+		additionnalSpacesAllowed     = additionnalSpacesAllowed,
+		debugMode                    = debugMode,
+		externalImportationsAllowed  = externalImportationsAllowed,
+		pythonCharactersOptimization = pythonCharactersOptimization
+	)
 
 	#complete instruction set with external importations
 	i = 0
 	len_instructs = len(instructs)
 	importedFiles = []
 	while i < len_instructs:
-		if DEBUG_MODE:
+		if debugMode:
 			print("[DEBUG] Completing instructs : [" + str(i) + "] = " + str(instructs[i]) + " len " + str(len_instructs))
 
 		#importation detected => add it to current instructs
@@ -206,7 +236,22 @@ def fromText(text):
 			f.close()
 
 			#get its instructions
-			extIns = __textToInstructs(extText)
+			extIns = __textToInstructs(
+				extText,
+
+				#characters
+				comment_character    = comment_character,
+				lineEnd_character    = lineEnd_character,
+				newFile_character    = newFile_character,
+				separation_character = separation_character,
+				tabulation_character = tabulation_character,
+
+				#options
+				additionnalSpacesAllowed     = additionnalSpacesAllowed,
+				debugMode                    = debugMode,
+				externalImportationsAllowed  = externalImportationsAllowed,
+				pythonCharactersOptimization = pythonCharactersOptimization
+			)
 			len_extIns = len(extIns)
 
 			#for each imported instruction
@@ -234,7 +279,7 @@ def fromText(text):
 		raise ValueError("Incorrect value for last element : child element required.")
 
 	#debug
-	if DEBUG_MODE:
+	if debugMode:
 		print("[DEBUG] Completed instructs = [")
 		for i in instructs:
 			print("\t" + str(i) + ",")
@@ -242,12 +287,42 @@ def fromText(text):
 
 	#finally translate instructions into data
 	_.instructsIndex = 0
-	return __instructsToData(instructs)
+	return __instructsToData(
+		instructs,
+
+		#characters
+		comment_character    = comment_character,
+		lineEnd_character    = lineEnd_character,
+		newFile_character    = newFile_character,
+		separation_character = separation_character,
+		tabulation_character = tabulation_character,
+
+		#options
+		additionnalSpacesAllowed     = additionnalSpacesAllowed,
+		debugMode                    = debugMode,
+		externalImportationsAllowed  = externalImportationsAllowed,
+		pythonCharactersOptimization = pythonCharactersOptimization
+	)
 
 
 
 #parsing
-def __textToInstructs(text):
+def __textToInstructs(
+	text,
+
+	#characters
+	comment_character    = COMMENT_CHARACTER,
+	lineEnd_character    = LINE_END_CHARACTER,
+	newFile_character    = NEW_FILE_CHARACTER,
+	separation_character = SEPARATION_CHARACTER,
+	tabulation_character = TABULATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed     = ADDITIONAL_SPACES_ALLOWED,
+	debugMode                    = DEBUG_MODE,
+	externalImportationsAllowed  = EXTERNAL_IMPORTATIONS_ALLOWED,
+	pythonCharactersOptimization = PYTHON_CHARACTERS_OPTIMIZATION
+):
 	'''
 	[INTERNAL FUNCTION] Parse raw text to an instruction list
 
@@ -360,7 +435,7 @@ def __textToInstructs(text):
 		elif not inComment:
 
 			#field detection : comment
-			if char == COMMENT_CHARACTER:
+			if char == comment_character:
 				inComment = True
 
 			#field detection : character
@@ -388,7 +463,7 @@ def __textToInstructs(text):
 					)
 
 			#end of instruction => passing to the new one
-			elif char == LINE_END_CHARACTER:
+			elif char == lineEnd_character:
 				raw_instructs.append(
 					[line_nbr, colm_nbr, "", "", ""]
 				)
@@ -412,7 +487,7 @@ def __textToInstructs(text):
 		)
 
 	#remove additional spaces (optional)
-	if ADDITIONAL_SPACES_ALLOWED:
+	if additionnalSpacesAllowed:
 		for a in range(len(raw_instructs)):
 
 			#remove spaces in raw_instructs[a][RI__RAW_TEXT]
@@ -423,7 +498,7 @@ def __textToInstructs(text):
 			raw_instructs[a][RI__RAW_TEXT] = ri_rawText
 
 	#debug
-	if DEBUG_MODE:
+	if debugMode:
 		print("[DEBUG] raw_instructs = [")
 		for ri in raw_instructs:
 			print("\t" + str(ri) + ",")
@@ -463,10 +538,10 @@ def __textToInstructs(text):
 		#phase 2 : IMPORTATIONS
 
 		#importation detected
-		if ri[RI__RAW_TEXT].startswith(NEW_FILE_CHARACTER):
+		if ri[RI__RAW_TEXT].startswith(newFile_character):
 
 			#add it if option enabled
-			if EXTERNAL_IMPORTATIONS_ALLOWED:
+			if externalImportationsAllowed:
 				instructs.append([
 					ri[RI__LINE_NBR],    #line_nbr
 					ri[RI__COLM_NBR],    #colm_nbr
@@ -494,14 +569,14 @@ def __textToInstructs(text):
 
 		#set depth
 		for c in ri[RI__RAW_TEXT]:
-			if c == TABULATION_CHARACTER:
+			if c == tabulation_character:
 				instructs[-1][I__DEPTH] += 1
 				ri[RI__RAW_TEXT] = ri[RI__RAW_TEXT][1:] #cut the 1st character
 			else:
 				break
 
 		#separate key-value pair
-		pair = ri[RI__RAW_TEXT].split(SEPARATION_CHARACTER)
+		pair = ri[RI__RAW_TEXT].split(separation_character)
 		if len(pair) != 2:
 			raise ValueError(
 				"One separation character is required per instruction (line " + \
@@ -603,7 +678,7 @@ def __textToInstructs(text):
 			instructs[-1][I__VALUE] = -( instructs[-1][I__VALUE] )
 
 	#debug
-	if DEBUG_MODE:
+	if debugMode:
 		print("[DEBUG] instructs = [")
 		for i in instructs:
 			print("\t" + str(i) + ",")
@@ -614,7 +689,22 @@ def __textToInstructs(text):
 
 
 #translate intructions into data
-def __getFullValue(instructs, current_depth):
+def __getFullValue(
+	instructs, current_depth,
+
+	#characters
+	comment_character    = COMMENT_CHARACTER,
+	lineEnd_character    = LINE_END_CHARACTER,
+	newFile_character    = NEW_FILE_CHARACTER,
+	separation_character = SEPARATION_CHARACTER,
+	tabulation_character = TABULATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed     = ADDITIONAL_SPACES_ALLOWED,
+	debugMode                    = DEBUG_MODE,
+	externalImportationsAllowed  = EXTERNAL_IMPORTATIONS_ALLOWED,
+	pythonCharactersOptimization = PYTHON_CHARACTERS_OPTIMIZATION
+):
 	'''
 	[INTERNAL FUNCTION] Get value of instruction even if it is a parent.
 	This function is 2-times recursive with __instructsToData().
@@ -628,11 +718,42 @@ def __getFullValue(instructs, current_depth):
 	value = instructs[_.instructsIndex][I__VALUE]
 	_.instructsIndex += 1
 	if value is None:
-		value = __instructsToData(instructs, current_depth+1)
+		value = __instructsToData(
+			instructs, current_depth+1,
+
+			#characters
+			comment_character    = comment_character,
+			lineEnd_character    = lineEnd_character,
+			newFile_character    = newFile_character,
+			separation_character = separation_character,
+			tabulation_character = tabulation_character,
+
+			#options
+			additionnalSpacesAllowed     = additionnalSpacesAllowed,
+			debugMode                    = debugMode,
+			externalImportationsAllowed  = externalImportationsAllowed,
+			pythonCharactersOptimization = pythonCharactersOptimization
+		)
 
 	return value
 
-def __instructsToData(instructs, current_depth=0):
+def __instructsToData(
+	instructs,
+	current_depth=0,
+
+	#characters
+	comment_character    = COMMENT_CHARACTER,
+	lineEnd_character    = LINE_END_CHARACTER,
+	newFile_character    = NEW_FILE_CHARACTER,
+	separation_character = SEPARATION_CHARACTER,
+	tabulation_character = TABULATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed     = ADDITIONAL_SPACES_ALLOWED,
+	debugMode                    = DEBUG_MODE,
+	externalImportationsAllowed  = EXTERNAL_IMPORTATIONS_ALLOWED,
+	pythonCharactersOptimization = PYTHON_CHARACTERS_OPTIMIZATION
+):
 	'''
 	[INTERNAL FUNCTION] Translates an instruction list into data structure.
 	This function is 2-times recursive with __getFullValue().
@@ -654,7 +775,7 @@ def __instructsToData(instructs, current_depth=0):
 	while _.instructsIndex < instructs_len:
 
 		#debug
-		if DEBUG_MODE:
+		if debugMode:
 			print("[DEBUG] translating into data " + str(instructs[_.instructsIndex]) + "  instructsIndex " + str(_.instructsIndex) + ".")
 
 		#case 1 : too much indent
@@ -688,7 +809,24 @@ def __instructsToData(instructs, current_depth=0):
 					)
 
 				#add brother element next to the current one
-				data.append( __getFullValue(instructs, current_depth) )
+				data.append(
+					__getFullValue(
+						instructs, current_depth,
+
+						#characters
+						comment_character    = comment_character,
+						lineEnd_character    = lineEnd_character,
+						newFile_character    = newFile_character,
+						separation_character = separation_character,
+						tabulation_character = tabulation_character,
+
+						#options
+						additionnalSpacesAllowed     = additionnalSpacesAllowed,
+						debugMode                    = debugMode,
+						externalImportationsAllowed  = externalImportationsAllowed,
+						pythonCharactersOptimization = pythonCharactersOptimization
+					)
+				)
 
 			#non-list element (brothers must be of the same kind)
 			else:
@@ -709,7 +847,22 @@ def __instructsToData(instructs, current_depth=0):
 					)
 
 				#add brother element next to the current one (get value even recursively)
-				data[key] = __getFullValue(instructs, current_depth)
+				data[key] = __getFullValue(
+					instructs, current_depth,
+
+					#characters
+					comment_character    = comment_character,
+					lineEnd_character    = lineEnd_character,
+					newFile_character    = newFile_character,
+					separation_character = separation_character,
+					tabulation_character = tabulation_character,
+
+					#options
+					additionnalSpacesAllowed     = additionnalSpacesAllowed,
+					debugMode                    = debugMode,
+					externalImportationsAllowed  = externalImportationsAllowed,
+					pythonCharactersOptimization = pythonCharactersOptimization
+				)
 
 		#case 4 : brother element of a parent (an uncle / grand-uncle / ...) => not of our business (end of child block)
 		else:
@@ -720,7 +873,22 @@ def __instructsToData(instructs, current_depth=0):
 
 
 #data -> to text
-def __elementToText(elem, depth):
+def __elementToText(
+	elem, depth,
+
+	#characters
+	comment_character    = COMMENT_CHARACTER,
+	lineEnd_character    = LINE_END_CHARACTER,
+	newFile_character    = NEW_FILE_CHARACTER,
+	separation_character = SEPARATION_CHARACTER,
+	tabulation_character = TABULATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed     = ADDITIONAL_SPACES_ALLOWED,
+	debugMode                    = DEBUG_MODE,
+	externalImportationsAllowed  = EXTERNAL_IMPORTATIONS_ALLOWED,
+	pythonCharactersOptimization = PYTHON_CHARACTERS_OPTIMIZATION
+):
 	'''
 	[INTERNAL FUNCTION] Convert a data element into DREAMLANDS text.
 	This function is recursive.
@@ -734,16 +902,46 @@ def __elementToText(elem, depth):
 
 	#case 1: [PARENT] element is a dictionnary
 	if isinstance(elem, dict):
-		text = LINE_END_CHARACTER
+		text = lineEnd_character
 		for k in elem.keys():
-			text += newDepth*TABULATION_CHARACTER + k + SEPARATION_CHARACTER + __elementToText(elem[k], newDepth)
+			text += newDepth*tabulation_character + k + separation_character + __elementToText(
+				elem[k], newDepth,
+
+				#characters
+				comment_character    = comment_character,
+				lineEnd_character    = lineEnd_character,
+				newFile_character    = newFile_character,
+				separation_character = separation_character,
+				tabulation_character = tabulation_character,
+
+				#options
+				additionnalSpacesAllowed     = additionnalSpacesAllowed,
+				debugMode                    = debugMode,
+				externalImportationsAllowed  = externalImportationsAllowed,
+				pythonCharactersOptimization = pythonCharactersOptimization
+			)
 		return text
 
 	#case 2: [PARENT] element is a tuple/list
 	elif isinstance(elem, tuple) or isinstance(elem, list):
 		text = LINE_END_CHARACTER
 		for e in elem:
-			text += newDepth*TABULATION_CHARACTER + '-' + SEPARATION_CHARACTER + __elementToText(e, newDepth)
+			text += newDepth*tabulation_character + '-' + separation_character + __elementToText(
+				e, newDepth,
+
+				#characters
+				comment_character    = comment_character,
+				lineEnd_character    = lineEnd_character,
+				newFile_character    = newFile_character,
+				separation_character = separation_character,
+				tabulation_character = tabulation_character,
+
+				#options
+				additionnalSpacesAllowed     = additionnalSpacesAllowed,
+				debugMode                    = debugMode,
+				externalImportationsAllowed  = externalImportationsAllowed,
+				pythonCharactersOptimization = pythonCharactersOptimization
+			)
 		return text
 
 	#case 3: [CHILD] element is standalone
@@ -752,26 +950,41 @@ def __elementToText(elem, depth):
 		#special case 3.1: boolean
 		if isinstance(elem, bool):
 			if elem:
-				return "true" + LINE_END_CHARACTER
-			return "false" + LINE_END_CHARACTER
+				return "true" + lineEnd_character
+			return "false" + lineEnd_character
 
 		#special case 3.2: strings
 		elif isinstance(elem, str):
 
 			#python characters optimization
-			if PYTHON_CHARACTERS_OPTIMIZATION:
+			if pythonCharactersOptimization:
 				if len(elem) == 1:
-					return "\'" + str(elem) + "\'" + LINE_END_CHARACTER
-			return "\"" + str(elem) + "\"" + LINE_END_CHARACTER
+					return "\'" + str(elem) + "\'" + lineEnd_character
+			return "\"" + str(elem) + "\"" + lineEnd_character
 
 		#regular case 3.3: other [integer (including negative sign), floating point number (including negative sign)]
-		return str(elem) + LINE_END_CHARACTER
+		return str(elem) + lineEnd_character
 
 	#case 4: element is None => ERROR
 	else:
 		raise ValueError("Unable to parse DREAMLANDS text, data contains None value(s).")
 
-def toText(data):
+def toText(
+	data,
+
+	#characters
+	comment_character    = COMMENT_CHARACTER,
+	lineEnd_character    = LINE_END_CHARACTER,
+	newFile_character    = NEW_FILE_CHARACTER,
+	separation_character = SEPARATION_CHARACTER,
+	tabulation_character = TABULATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed     = ADDITIONAL_SPACES_ALLOWED,
+	debugMode                    = DEBUG_MODE,
+	externalImportationsAllowed  = EXTERNAL_IMPORTATIONS_ALLOWED,
+	pythonCharactersOptimization = PYTHON_CHARACTERS_OPTIMIZATION
+):
 	'''
 	Convert a data structure into DREAMLANDS text.
 
@@ -785,7 +998,22 @@ def toText(data):
 		raise ValueError("Could not parse DREAMLANDS text, data has incorrect type (dict, tuple or list allowed).")
 
 	#parse data
-	return __elementToText(data, -1)[1:] #skip 1st character (useless LINE_END_CHARACTER in global context)
+	return __elementToText(
+		data, -1,
+
+		#characters
+		comment_character    = comment_character,
+		lineEnd_character    = lineEnd_character,
+		newFile_character    = newFile_character,
+		separation_character = separation_character,
+		tabulation_character = tabulation_character,
+
+		#options
+		additionnalSpacesAllowed     = additionnalSpacesAllowed,
+		debugMode                    = debugMode,
+		externalImportationsAllowed  = externalImportationsAllowed,
+		pythonCharactersOptimization = pythonCharactersOptimization
+	)[1:] #skip 1st character (useless LINE_END_CHARACTER in global context)
 
 
 
@@ -795,7 +1023,22 @@ def toText(data):
 # ---- READ / WRITE ----
 
 #read text from file => return data as dict
-def read(filename):
+def read(
+	filename,
+
+	#characters
+	comment_character    = COMMENT_CHARACTER,
+	lineEnd_character    = LINE_END_CHARACTER,
+	newFile_character    = NEW_FILE_CHARACTER,
+	separation_character = SEPARATION_CHARACTER,
+	tabulation_character = TABULATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed     = ADDITIONAL_SPACES_ALLOWED,
+	debugMode                    = DEBUG_MODE,
+	externalImportationsAllowed  = EXTERNAL_IMPORTATIONS_ALLOWED,
+	pythonCharactersOptimization = PYTHON_CHARACTERS_OPTIMIZATION
+):
 	'''
 	Read a DREAMLANDS file.
 
@@ -810,24 +1053,69 @@ def read(filename):
 	f.close()
 
 	#parse
-	return fromText(text)
+	return fromText(
+		text,
+
+		#characters
+		comment_character    = comment_character,
+		lineEnd_character    = lineEnd_character,
+		newFile_character    = newFile_character,
+		separation_character = separation_character,
+		tabulation_character = tabulation_character,
+
+		#options
+		additionnalSpacesAllowed     = additionnalSpacesAllowed,
+		debugMode                    = debugMode,
+		externalImportationsAllowed  = externalImportationsAllowed,
+		pythonCharactersOptimization = pythonCharactersOptimization
+	)
 
 
 
 
 #write data into file
-def write(data, filename):
+def write(
+	filename, data,
+
+	#characters
+	comment_character    = COMMENT_CHARACTER,
+	lineEnd_character    = LINE_END_CHARACTER,
+	newFile_character    = NEW_FILE_CHARACTER,
+	separation_character = SEPARATION_CHARACTER,
+	tabulation_character = TABULATION_CHARACTER,
+
+	#options
+	additionnalSpacesAllowed     = ADDITIONAL_SPACES_ALLOWED,
+	debugMode                    = DEBUG_MODE,
+	externalImportationsAllowed  = EXTERNAL_IMPORTATIONS_ALLOWED,
+	pythonCharactersOptimization = PYTHON_CHARACTERS_OPTIMIZATION
+):
 	'''
 	Write data into a DREAMLANDS file.
 
-	data: dict
 	filename: str
+	data: dict
 
 	Write the data respecting the DREAMLANDS syntax.
 	'''
 
 	#unparse
-	text = toText(data)
+	text = toText(
+		data,
+
+		#characters
+		comment_character    = comment_character,
+		lineEnd_character    = lineEnd_character,
+		newFile_character    = newFile_character,
+		separation_character = separation_character,
+		tabulation_character = tabulation_character,
+
+		#options
+		additionnalSpacesAllowed     = additionnalSpacesAllowed,
+		debugMode                    = debugMode,
+		externalImportationsAllowed  = externalImportationsAllowed,
+		pythonCharactersOptimization = pythonCharactersOptimization
+	)
 
 	#write out
 	f = open(filename, "w")

@@ -102,4 +102,4 @@ prettyPrint(new_data_dict)
 print("in file 'devices.dl'.")
 
 #write into a dreamlands file
-dl.write(new_data_dict, "devices.dl")
+dl.write("devices.dl", new_data_dict)
